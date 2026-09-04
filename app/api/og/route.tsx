@@ -65,10 +65,18 @@ export async function GET(req: Request): Promise<Response> {
   }));
 
   const eyebrow = `${year} ANNUAL LEAVE`;
+  // 이어진 연휴가 없으면 "최장 1일 연휴" 대신 사실대로 적는다
   const headline = result.usedCount > 0 ? `연차 ${result.usedCount}일로` : '연차를 놓아 보면';
-  const headline2 = result.usedCount > 0 ? `최장 ${result.longestStreak}일 연휴` : `${year}년 연휴 만들기`;
+  const headline2 =
+    result.runs.length > 0
+      ? `최장 ${result.longestStreak}일 연휴`
+      : result.usedCount > 0
+        ? '아직 이어진 연휴 없음'
+        : `${year}년 연휴 만들기`;
   const subline =
-    result.usedCount > 0
+    result.runs.length === 0 && result.usedCount > 0
+      ? `붙지 않은 연차 ${result.stranded.length}일 · 옆 날짜로 옮기면 연휴가 됩니다`
+      : result.usedCount > 0
       ? `연휴 ${result.runs.length}건 · 총 휴식 ${result.restDays}일 · 연차 1일당 ${result.perLeave.toFixed(1)}일${
           result.stranded.length > 0 ? ` · 붙지 않은 연차 ${result.stranded.length}일` : ''
         }`

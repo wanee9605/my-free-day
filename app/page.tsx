@@ -41,14 +41,19 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     notBefore: currentYearToday(DEFAULT_YEAR),
     selected: state.selected,
   });
+  // 하루짜리 연차만 놓인 상태를 "최장 1일 연휴" 라고 부르지 않는다
   const title =
-    result.usedCount > 0
+    result.runs.length > 0
       ? `연차 ${result.usedCount}일로 최장 ${result.longestStreak}일 연휴`
-      : `${DEFAULT_YEAR}년 연차 계획 세우기`;
+      : result.usedCount > 0
+        ? `연차 ${result.usedCount}일 — 아직 이어진 연휴가 없어요`
+        : `${DEFAULT_YEAR}년 연차 계획 세우기`;
   const description =
     result.runs.length > 0
       ? `${DEFAULT_YEAR}년 연휴 ${result.runs.length}건 · 총 휴식 ${result.restDays}일. 달력에서 직접 배치한 연차 계획입니다.`
-      : `${DEFAULT_YEAR}년 공휴일 기준으로 연차를 달력에 직접 놓아 가며 연휴를 만들어 보세요.`;
+      : result.usedCount > 0
+        ? `연차 ${result.usedCount}일을 놓았지만 앞뒤 휴일과 이어지지 않았습니다. 옆 날짜로 옮기면 연휴가 됩니다.`
+        : `${DEFAULT_YEAR}년 공휴일 기준으로 연차를 달력에 직접 놓아 가며 연휴를 만들어 보세요.`;
 
   return {
     title,
