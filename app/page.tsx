@@ -53,8 +53,9 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title,
     description,
-    alternates: { canonical: '/' }, // 쿼리별 URL이 따로 색인되지 않도록
-    openGraph: { title, description, url: '/', images },
+    alternates: { canonical: '/' }, // 검색엔진: 쿼리별 URL이 따로 색인되지 않도록
+    // 메신저·SNS 는 og:url 을 카드의 이동 대상으로 쓰므로 공유한 상태를 그대로 유지한다
+    openGraph: { title, description, url: `/${query}`, images },
   };
 }
 
