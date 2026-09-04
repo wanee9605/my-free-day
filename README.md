@@ -91,7 +91,9 @@ npm run fetch:holidays -- --year=2028
 
 - 입력 상태는 `?leave=2&mode=longest&blackout=2027-09-01~2027-09-30&fix=6:2` 형태로 URL에 반영되어 링크만으로 복원됩니다.
 - `/api/og?year=2027&leave=2` 가 같은 파라미터로 결과를 재계산해 1080×1350 PNG를 생성합니다. 한글 폰트는 Google Fonts(Noto Sans KR)를 렌더 텍스트만 서브셋으로 받아 사용하며, 네트워크가 막힌 환경에서는 기본 폰트로 폴백됩니다.
-- 배포 시 `NEXT_PUBLIC_SITE_URL` 을 실제 도메인으로 설정하면 메타 태그·sitemap 에 반영됩니다.
+- 공유 버튼이 복사하는 링크는 쿼리를 단 `/` 이므로, `app/page.tsx` 의 `generateMetadata` 가 그 쿼리로 결과를 재계산해 제목·설명·OG 이미지에 반영합니다. 쿼리가 없으면 사이트 기본 문구를 유지합니다. 이 때문에 `/` 는 동적 렌더링이고 `/2027` 은 SSG 입니다.
+- `og:url` 에는 쿼리를 포함한 URL 이, `canonical` 에는 `/` 가 들어갑니다. 메신저 카드를 눌렀을 때 공유한 상태로 돌아오면서도 쿼리별 URL 이 따로 색인되지 않게 하기 위해서입니다.
+- 배포 시 `NEXT_PUBLIC_SITE_URL` 을 실제 도메인으로 설정하면 메타 태그·sitemap 에 반영됩니다. 현재 프로덕션은 https://my-free-day.vercel.app 이며, `main` 에 푸시하면 Vercel 이 자동 배포합니다.
 
 ## 명세서 대비 변경점
 
