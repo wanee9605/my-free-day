@@ -52,6 +52,9 @@ export default function InputPanel({ year, state, onChange, onCommit, onYearChan
   const setLeaveTyped = (n: number) => onChange({ ...state, leave: clampLeave(n) });
   const setLeave = (n: number) => onCommit({ ...state, leave: clampLeave(n) });
   const setMode = (mode: OptimizeMode) => onCommit({ ...state, mode });
+  // 빈 칸이면 제한 없음. 상한을 낮추면 곡선이 잘려 고정 배정도 그 안으로 줄어든다
+  const setMaxPerCluster = (raw: string) =>
+    onChange({ ...state, maxPerCluster: raw === '' ? undefined : clampLeave(Number(raw)) || undefined });
 
   // 근무 형태가 바뀌면 쉬는 날 자체가 달라져 클러스터 구성이 뒤집히므로 고정 배정은 버린다
   const setWork = (work: WorkPattern) => onCommit({ ...state, work, fixed: {} });
@@ -213,6 +216,26 @@ export default function InputPanel({ year, state, onChange, onCommit, onYearChan
             })}
           </div>
           <p className="text-xs leading-relaxed text-ink-mute">{activeMode.hint}</p>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-semibold text-ink-mute" htmlFor="max-run">
+              한 연휴 최대 연차
+            </label>
+            <input
+              id="max-run"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={MAX_LEAVE_INPUT}
+              placeholder="제한 없음"
+              value={state.maxPerCluster ?? ''}
+              onChange={(e) => setMaxPerCluster(e.target.value)}
+              className={FIELD}
+            />
+            <p className="text-xs leading-relaxed text-ink-mute">
+              한 번의 연휴에 몰아 쓸 수 있는 연차를 제한합니다. 길게 붙여 쓰기 어려운 회사라면 3~5일로 두세요.
+            </p>
+          </div>
         </div>
 
         {/* 근무 형태 + 연도 + 블랙아웃 */}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { fmtRangeShort, fmtShort } from '@/lib/format';
+import { buildIcs, icsFileName } from '@/lib/ics';
 import type { OptimizeResult } from '@/lib/types';
 import { serializePlannerState, type PlannerState } from '@/lib/urlState';
 
@@ -93,6 +94,27 @@ export default function ShareButton({ year, state, result, compact = false }: Pr
     }
   }
 
+  /** 구글·애플·아웃룩이 모두 읽는 .ics 로 내려받는다 (연동에 로그인이 필요 없다) */
+  function saveCalendar() {
+    if (result.recommendations.length === 0) {
+      setStatus({ kind: 'error', text: '내보낼 연차가 없어요' });
+      return;
+    }
+    try {
+      const ics = buildIcs(year, result, { sourceUrl: window.location.href });
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = icsFileName(year);
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setStatus({ kind: 'done', text: '캘린더 파일을 내려받았어요' });
+    } catch {
+      setStatus({ kind: 'error', text: '캘린더 파일을 만들지 못했어요' });
+    }
+  }
+
   const busy = status.kind === 'busy';
 
   if (compact) {
@@ -131,6 +153,13 @@ export default function ShareButton({ year, state, result, compact = false }: Pr
         className="min-h-10 rounded-xl border border-line bg-surface px-4 text-sm font-bold text-ink-soft transition hover:border-forest-300 hover:text-ink"
       >
         링크 복사
+      </button>
+      <button
+        type="button"
+        onClick={saveCalendar}
+        className="min-h-10 rounded-xl border border-line bg-surface px-4 text-sm font-bold text-ink-soft transition hover:border-forest-300 hover:text-ink"
+      >
+        캘린더에 추가
       </button>
       <a
         href={ogUrl}

@@ -104,6 +104,7 @@ export default function LeavePlanner({ year }: Props) {
         fixedAllocations: applied.fixed,
         notBefore,
         workPattern: applied.work,
+        maxLeavePerCluster: applied.maxPerCluster,
       }),
     [year, applied, notBefore],
   );

@@ -127,9 +127,27 @@ export function buildYearDays(input: Pick<OptimizeInput, 'year' | 'blackoutRange
   });
 }
 
+/**
+ * 한 연휴에 몰아 쓸 수 있는 연차 상한.
+ * 곡선을 잘라 두면 DP·최장 연휴 선택·직접 조정이 모두 자연히 상한을 지킨다.
+ */
+export function normalizeMaxPerCluster(max: number | undefined): number | undefined {
+  if (max === undefined || !Number.isFinite(max)) return undefined;
+  const n = Math.floor(max);
+  return n >= 1 ? Math.min(n, MAX_LEAVE_INPUT) : undefined;
+}
+
+function capCurve(cluster: Cluster, cap: number | undefined): Cluster {
+  if (cap === undefined || cluster.curve.length - 1 <= cap) return cluster;
+  return { ...cluster, curve: cluster.curve.slice(0, cap + 1) };
+}
+
 /** 대상 연도의 클러스터(곡선 포함) 목록 */
-export function buildClusters(input: Pick<OptimizeInput, 'year' | 'blackoutRanges' | 'notBefore' | 'workPattern'>): Cluster[] {
-  return findClusters(buildYearDays(input)).map(withCurve);
+export function buildClusters(
+  input: Pick<OptimizeInput, 'year' | 'blackoutRanges' | 'notBefore' | 'workPattern' | 'maxLeavePerCluster'>,
+): Cluster[] {
+  const cap = normalizeMaxPerCluster(input.maxLeavePerCluster);
+  return findClusters(buildYearDays(input)).map((c) => capCurve(withCurve(c), cap));
 }
 
 export function normalizeLeave(count: number): number {
@@ -208,7 +226,7 @@ export function optimize(input: OptimizeInput): OptimizeResult {
     const base = c.curve[0];
     const point = c.curve[alloc[i]] ?? base;
     if (!point) return;
-    const maxLeave = c.selectableWorkdays.length;
+    const maxLeave = c.curve.length - 1; // 상한이 걸리면 그만큼 줄어든다
     const isFixed = input.fixedAllocations?.[c.id] !== undefined;
 
     if (base && base.streak >= 3 && point.usedLeave === 0) {

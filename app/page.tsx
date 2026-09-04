@@ -42,6 +42,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     mode: state.mode,
     fixedAllocations: state.fixed,
     workPattern: state.work,
+    maxLeavePerCluster: state.maxPerCluster,
   });
   const title =
     result.totalLeaveUsed > 0

@@ -1,6 +1,6 @@
 // 입력 상태 ↔ URL 쿼리 변환 (공유 링크·OG 이미지가 동일 상태를 복원하도록)
 import { isValidISODate, normalizeWorkPattern } from './calendar';
-import { MAX_BLACKOUT_RANGES, MAX_LEAVE_INPUT } from './optimize';
+import { MAX_BLACKOUT_RANGES, MAX_LEAVE_INPUT, normalizeMaxPerCluster } from './optimize';
 import { DEFAULT_WORK_PATTERN, type DateRange, type OptimizeMode, type WorkPattern } from './types';
 
 export interface PlannerState {
@@ -9,6 +9,8 @@ export interface PlannerState {
   blackout: DateRange[]; // 입력 중인(미완성 포함) 구간. 계산 시 normalizeRanges 로 걸러짐
   fixed: Record<number, number>; // 사용자가 직접 조정한 클러스터별 연차 (clusterId → 슬롯)
   work: WorkPattern;
+  /** 한 연휴에 몰아 쓸 수 있는 연차 상한. undefined 면 제한 없음 */
+  maxPerCluster?: number;
 }
 
 export const DEFAULT_STATE: PlannerState = {
@@ -80,7 +82,14 @@ export function parsePlannerState(params: ParamSource | null | undefined): Plann
     }
   }
 
-  return { leave, mode, blackout, fixed, work: parseWorkPattern(params.get('work')) };
+  return {
+    leave,
+    mode,
+    blackout,
+    fixed,
+    work: parseWorkPattern(params.get('work')),
+    maxPerCluster: normalizeMaxPerCluster(Number(params.get('maxrun'))),
+  };
 }
 
 /** 기본값과 같은 항목은 생략. 미완성 블랙아웃 구간은 제외 */
@@ -94,6 +103,8 @@ export function serializePlannerState(state: PlannerState): URLSearchParams {
   if (fixEntries.length > 0) params.set('fix', fixEntries.map(([id, k]) => `${id}:${k}`).join(','));
   const work = serializeWorkPattern(state.work);
   if (work) params.set('work', work);
+  const cap = normalizeMaxPerCluster(state.maxPerCluster);
+  if (cap !== undefined) params.set('maxrun', String(cap));
   return params;
 }
 

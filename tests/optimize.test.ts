@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildDays, currentYearToday, daysInYear } from '@/lib/calendar';
 import { findClusters } from '@/lib/cluster';
 import { SUPPORTED_YEARS, getHolidayData, isSupportedYear } from '@/lib/holidays';
-import { buildClusters, optimize } from '@/lib/optimize';
+import { buildClusters, normalizeMaxPerCluster, optimize } from '@/lib/optimize';
 import type { OptimizeInput } from '@/lib/types';
 
 const YEAR = 2027;
@@ -312,5 +312,48 @@ describe('notBefore — 진행 중인 연도의 지난 날짜 제외', () => {
     });
     expect(withPast.longestStreak).toBe(base.longestStreak);
     expect(withPast.longestStreakRange).toEqual(base.longestStreakRange);
+  });
+});
+
+describe('maxLeavePerCluster — 한 연휴 최대 연차', () => {
+  it('상한을 넘겨 배정하지 않는다', () => {
+    for (const cap of [1, 2, 3, 5]) {
+      for (const mode of ['longestStreak', 'totalGain'] as const) {
+        const r = run({ annualLeaveCount: 20, mode, maxLeavePerCluster: cap });
+        for (const rec of r.recommendations) expect(rec.cost, `${mode}/${cap}`).toBeLessThanOrEqual(cap);
+      }
+    }
+  });
+
+  it('상한을 걸면 최장 연휴가 짧아지고, 남는 연차는 다른 연휴로 흩어진다', () => {
+    const free = run({ annualLeaveCount: 6, mode: 'longestStreak' });
+    const capped = run({ annualLeaveCount: 6, mode: 'longestStreak', maxLeavePerCluster: 1 });
+    expect(capped.longestStreak).toBeLessThan(free.longestStreak);
+    expect(capped.recommendations.length).toBeGreaterThan(free.recommendations.length);
+  });
+
+  it('카드의 최대치(maxLeave)와 다음 단계 힌트도 상한을 따른다', () => {
+    const r = run({ annualLeaveCount: 20, mode: 'totalGain', maxLeavePerCluster: 2 });
+    for (const rec of r.recommendations) {
+      expect(rec.maxLeave).toBeLessThanOrEqual(2);
+      expect(rec.nextStep?.leave ?? 0).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it('직접 고정한 배정도 상한 안으로 잘린다', () => {
+    const chuseok = buildClusters({ year: YEAR, blackoutRanges: [] }).find((c) => c.label === '추석 연휴')!;
+    const r = run({ annualLeaveCount: 10, mode: 'totalGain', maxLeavePerCluster: 1, fixedAllocations: { [chuseok.id]: 2 } });
+    expect(r.recommendations.find((x) => x.clusterId === chuseok.id)?.cost).toBeLessThanOrEqual(1);
+  });
+
+  it('제한 없음으로 취급하는 값들', () => {
+    expect(normalizeMaxPerCluster(undefined)).toBeUndefined();
+    expect(normalizeMaxPerCluster(0)).toBeUndefined();
+    expect(normalizeMaxPerCluster(-3)).toBeUndefined();
+    expect(normalizeMaxPerCluster(Number.NaN)).toBeUndefined();
+    expect(normalizeMaxPerCluster(2.9)).toBe(2);
+    const free = run({ annualLeaveCount: 5, mode: 'totalGain' });
+    const same = run({ annualLeaveCount: 5, mode: 'totalGain', maxLeavePerCluster: 0 });
+    expect(same.totalGain).toBe(free.totalGain);
   });
 });

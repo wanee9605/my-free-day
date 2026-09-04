@@ -53,6 +53,7 @@ export async function GET(req: Request): Promise<Response> {
     mode: state.mode,
     fixedAllocations: state.fixed,
     workPattern: state.work,
+    maxLeavePerCluster: state.maxPerCluster,
   });
   const cards = result.recommendations.slice(0, 3).map((r) => ({
     label: r.label,

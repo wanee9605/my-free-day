@@ -111,6 +111,8 @@ export interface OptimizeInput {
   mode: OptimizeMode;
   /** 근무 형태. 생략하면 주 5일 */
   workPattern?: WorkPattern;
+  /** 한 연휴에 몰아 쓸 수 있는 연차 상한. 생략하면 제한 없음 */
+  maxLeavePerCluster?: number;
   /** 사용자가 직접 지정한 클러스터별 연차 배정 (clusterId → 슬롯 k). 나머지는 자동 */
   fixedAllocations?: Record<number, number>;
   /** 이 날짜보다 이전인 평일은 연차 대상에서 제외. 진행 중인 연도에서만 쓴다 */
