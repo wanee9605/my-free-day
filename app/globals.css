@@ -1,0 +1,140 @@
+@import 'tailwindcss';
+
+/* ── 디자인 토큰 ──────────────────────────────────────────────
+   딥 포레스트 그린 + 웜 아이보리. 채도를 낮춘 좁은 팔레트로
+   대비는 명도와 여백으로 만든다. */
+@theme {
+  --color-ivory: #faf9f5;
+  --color-ivory-deep: #f2efe7;
+  --color-surface: #ffffff;
+
+  --color-forest-950: #06251c;
+  --color-forest-900: #0b3b2e;
+  --color-forest-800: #12523f;
+  --color-forest-700: #176a51;
+  --color-forest-600: #1c8365;
+  --color-forest-500: #24a37d;
+  --color-forest-400: #4cc79c;
+  --color-forest-300: #7ad7b8;
+  --color-forest-200: #a7e3cc;
+  --color-forest-100: #d6f2e6;
+  --color-forest-50: #eefaf4;
+
+  --color-ink: #14201b;
+  --color-ink-soft: #4a5854;
+  --color-ink-mute: #8b968f;
+  --color-line: #e7e3d9;
+  --color-line-soft: #f0ede4;
+
+  --color-clay: #b4532a;
+  --color-clay-soft: #fbeee8;
+  --color-gold: #c19a3d;
+  --color-gold-soft: #faf3e0;
+
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI',
+    'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+
+  --shadow-lift: 0 1px 2px rgb(20 32 27 / 0.04), 0 8px 24px -12px rgb(20 32 27 / 0.14);
+  --shadow-raise: 0 2px 4px rgb(20 32 27 / 0.05), 0 18px 40px -18px rgb(20 32 27 / 0.22);
+  --shadow-deep: 0 24px 60px -24px rgb(6 37 28 / 0.45);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 숫자 입력 스피너 숨김 (증감 버튼을 따로 제공) */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* 포커스 링을 팔레트에 맞춤 */
+:focus-visible {
+  outline: 2px solid var(--color-forest-600);
+  outline-offset: 2px;
+}
+
+@utility display {
+  letter-spacing: -0.035em;
+  font-weight: 800;
+  line-height: 1.08;
+}
+
+@utility numeral {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+/* 라벨용 소형 대문자 스타일 */
+@utility eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* 히어로의 미세한 격자 무늬 */
+@utility grid-veil {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* 결과 전환 애니메이션 */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-pop {
+  animation: pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-pop {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
