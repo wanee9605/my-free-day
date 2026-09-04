@@ -1,7 +1,7 @@
 // /lib/ics.ts — 추천 결과를 iCalendar(.ics)로. 구글·애플·아웃룩이 모두 읽는 형식이라
 // OAuth 연동 없이 브라우저에서 파일 하나만 만들면 된다.
 import { addDays } from './calendar';
-import type { OptimizeResult } from './types';
+import type { OffRun } from './manual';
 
 const PRODID = '-//my-free-day//연차 최적화 캘린더//KO';
 const CRLF = '\r\n';
@@ -77,7 +77,7 @@ export interface BuildIcsOptions {
  * - 연휴 전체 구간: 며칠을 쉬는지 한눈에 (바쁨으로 잡지 않음)
  * - 연차 사용일: 실제로 휴가를 신청해야 하는 날
  */
-export function buildIcs(year: number, result: OptimizeResult, options: BuildIcsOptions = {}): string {
+export function buildIcs(year: number, runs: OffRun[], options: BuildIcsOptions = {}): string {
   const stamp = `${(options.now ?? new Date()).toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`;
   const lines = [
     'BEGIN:VCALENDAR',
@@ -88,17 +88,17 @@ export function buildIcs(year: number, result: OptimizeResult, options: BuildIcs
     `X-WR-CALNAME:${escapeText(`${year}년 연차 계획`)}`,
   ];
 
-  for (const rec of result.recommendations) {
-    const days = rec.selectedDays;
+  for (const rec of runs) {
+    const days = rec.leaveDays;
     const detail = [`연차 ${rec.cost}일: ${days.join(', ')}`, options.sourceUrl].filter(Boolean).join('\n');
 
     lines.push(
       ...renderEvent(
         {
-          uid: `${year}-${rec.clusterId}-streak@my-free-day`,
-          start: rec.rangeStart,
-          endInclusive: rec.rangeEnd,
-          summary: `${rec.label} ${rec.streak}일`,
+          uid: `${year}-${rec.start}-streak@my-free-day`,
+          start: rec.start,
+          endInclusive: rec.end,
+          summary: `${rec.label} ${rec.total}일`,
           description: detail,
           transparent: true,
         },
@@ -109,7 +109,7 @@ export function buildIcs(year: number, result: OptimizeResult, options: BuildIcs
     for (const date of days) {
       lines.push(
         ...renderEvent(
-          { uid: `${year}-${rec.clusterId}-${date}@my-free-day`, start: date, endInclusive: date, summary: `연차 · ${rec.label}` },
+          { uid: `${year}-${date}-leave@my-free-day`, start: date, endInclusive: date, summary: `연차 · ${rec.label}` },
           stamp,
         ),
       );

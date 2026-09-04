@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import LeavePlanner from '@/components/LeavePlanner';
+import Planner from '@/components/Planner';
 import { currentYearToday } from '@/lib/calendar';
 import { DEFAULT_YEAR } from '@/lib/holidays';
-import { optimize } from '@/lib/optimize';
+import { evaluate } from '@/lib/manual';
 import { parsePlannerState, plannerQueryString } from '@/lib/urlState';
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -25,8 +25,8 @@ function toParams(searchParams: SearchParams): URLSearchParams {
  * 쿼리가 기본 상태와 같으면(= 일반 방문) 사이트 기본 문구를 유지해 검색 노출을 해치지 않는다.
  */
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const state = parsePlannerState(toParams(await searchParams));
-  const query = plannerQueryString(state); // 유효한 값만 남긴 정규화 결과
+  const state = parsePlannerState(toParams(await searchParams), DEFAULT_YEAR);
+  const query = plannerQueryString(state, DEFAULT_YEAR); // 유효한 값만 남긴 정규화 결과
   const ogUrl = `/api/og?year=${DEFAULT_YEAR}${query.replace('?', '&')}`;
   const images = [{ url: ogUrl, width: 1080, height: 1350 }];
 
@@ -34,24 +34,21 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     return { alternates: { canonical: '/' }, openGraph: { url: '/', images } };
   }
 
-  const result = optimize({
+  const result = evaluate({
     year: DEFAULT_YEAR,
-    annualLeaveCount: state.leave,
     blackoutRanges: state.blackout,
-    notBefore: currentYearToday(DEFAULT_YEAR),
-    mode: state.mode,
-    fixedAllocations: state.fixed,
     workPattern: state.work,
-    maxLeavePerCluster: state.maxPerCluster,
+    notBefore: currentYearToday(DEFAULT_YEAR),
+    selected: state.selected,
   });
   const title =
-    result.totalLeaveUsed > 0
-      ? `연차 ${result.totalLeaveUsed}일로 최장 ${result.longestStreak}일 연휴`
-      : `연차 없이 최장 ${result.longestStreak}일 연휴`;
+    result.usedCount > 0
+      ? `연차 ${result.usedCount}일로 최장 ${result.longestStreak}일 연휴`
+      : `${DEFAULT_YEAR}년 연차 계획 세우기`;
   const description =
-    result.recommendations.length > 0
-      ? `${DEFAULT_YEAR}년 추천 연휴 ${result.recommendations.length}건 · 총 휴일 ${result.totalOffDays}일. 보유 연차로 최대 연휴를 만드는 날짜 조합입니다.`
-      : `${DEFAULT_YEAR}년 공휴일 기준 계산 결과입니다. 연차 개수를 입력하면 최소 연차로 최대 연휴를 만드는 조합을 추천합니다.`;
+    result.runs.length > 0
+      ? `${DEFAULT_YEAR}년 연휴 ${result.runs.length}건 · 총 휴식 ${result.restDays}일. 달력에서 직접 배치한 연차 계획입니다.`
+      : `${DEFAULT_YEAR}년 공휴일 기준으로 연차를 달력에 직접 놓아 가며 연휴를 만들어 보세요.`;
 
   return {
     title,
@@ -63,5 +60,5 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default function HomePage() {
-  return <LeavePlanner year={DEFAULT_YEAR} />;
+  return <Planner year={DEFAULT_YEAR} />;
 }

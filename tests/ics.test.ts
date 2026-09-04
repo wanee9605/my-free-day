@@ -1,11 +1,12 @@
 // .ics 내보내기 (lib/ics.ts)
 import { describe, expect, it } from 'vitest';
 import { buildIcs, foldLine, icsFileName } from '@/lib/ics';
-import { optimize } from '@/lib/optimize';
+import { autofillSelection, evaluate } from '@/lib/manual';
 
 const NOW = new Date('2026-09-04T01:02:03Z');
-const result = optimize({ year: 2027, annualLeaveCount: 2, blackoutRanges: [], mode: 'longestStreak' });
-const ics = buildIcs(2027, result, { now: NOW, sourceUrl: 'https://my-free-day.vercel.app/?leave=2' });
+const selected = autofillSelection({ year: 2027, blackoutRanges: [], selected: [], budget: 2, mode: 'longestStreak' });
+const result = evaluate({ year: 2027, blackoutRanges: [], selected });
+const ics = buildIcs(2027, result.runs, { now: NOW, sourceUrl: 'https://my-free-day.vercel.app/?leave=2' });
 const lines = ics.split('\r\n');
 
 describe('iCalendar 뼈대', () => {
@@ -19,7 +20,7 @@ describe('iCalendar 뼈대', () => {
   });
 
   it('추천 1건마다 연휴 구간 1개 + 연차 사용일만큼 이벤트가 생긴다', () => {
-    const expected = result.recommendations.reduce((n, r) => n + 1 + r.selectedDays.length, 0);
+    const expected = result.runs.reduce((n, r) => n + 1 + r.leaveDays.length, 0);
     expect(lines.filter((l) => l === 'BEGIN:VEVENT')).toHaveLength(expected);
     expect(expected).toBeGreaterThan(0);
   });

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import LeavePlanner from '@/components/LeavePlanner';
+import Planner from '@/components/Planner';
 import { SUPPORTED_YEARS, isSupportedYear } from '@/lib/holidays';
 
 interface Props {
@@ -35,5 +35,5 @@ export default async function YearPage({ params }: Props) {
   const year = Number(yearParam);
   if (!isSupportedYear(year)) notFound();
 
-  return <LeavePlanner year={year} />;
+  return <Planner year={year} />;
 }

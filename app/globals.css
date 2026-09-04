@@ -1,47 +1,91 @@
 @import 'tailwindcss';
 
 /* ── 디자인 토큰 ──────────────────────────────────────────────
-   딥 포레스트 그린 + 웜 아이보리. 채도를 낮춘 좁은 팔레트로
-   대비는 명도와 여백으로 만든다. */
-@theme {
-  --color-ivory: #faf9f5;
-  --color-ivory-deep: #f2efe7;
-  --color-surface: #ffffff;
+   워엄 그레이 바탕 + 딥 그린 액센트. 도구처럼 조밀하게 쓰는 화면이라
+   색 대비보다 선(line)과 밀도로 위계를 만든다.
+   라이트/다크는 아래 원시 변수만 갈아끼우고, Tailwind 유틸리티는
+   @theme inline 으로 그 변수를 가리키기만 한다(늦은 치환이라 자동 전환). */
+:root {
+  color-scheme: light;
 
-  --color-forest-950: #06251c;
-  --color-forest-900: #0b3b2e;
-  --color-forest-800: #12523f;
-  --color-forest-700: #176a51;
-  --color-forest-600: #1c8365;
-  --color-forest-500: #24a37d;
-  --color-forest-400: #4cc79c;
-  --color-forest-300: #7ad7b8;
-  --color-forest-200: #a7e3cc;
-  --color-forest-100: #d6f2e6;
-  --color-forest-50: #eefaf4;
+  --dc-canvas: #f1f1ef;
+  --dc-surface: #fcfcfb;
+  --dc-field: #ffffff;
+  --dc-line: #d9d9d4;
+  --dc-line-soft: #e6e6e1;
 
-  --color-ink: #14201b;
-  --color-ink-soft: #4a5854;
-  --color-ink-mute: #8b968f;
-  --color-line: #e7e3d9;
-  --color-line-soft: #f0ede4;
+  --dc-ink: #1e1f1e;
+  --dc-ink-2: #484a48;
+  --dc-ink-3: #75776f;
+  --dc-ink-4: #a0a29a;
 
-  --color-clay: #b4532a;
-  --color-clay-soft: #fbeee8;
-  --color-gold: #c19a3d;
-  --color-gold-soft: #faf3e0;
+  --dc-acc: #1f6f5c;
+  --dc-acc-ink: #14503f;
+  --dc-acc-soft: rgb(31 111 92 / 0.14);
+  --dc-acc-mid: rgb(31 111 92 / 0.38);
+
+  --dc-run: #e4e4de;
+  --dc-run-line: #c9c9c1;
+  --dc-hint: rgb(31 111 92 / 0.07);
+
+  --dc-sun: #c0392b;
+  --dc-sat: #2b57a8;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --dc-canvas: #101211;
+  --dc-surface: #171a18;
+  --dc-field: #1d211f;
+  --dc-line: #2b302d;
+  --dc-line-soft: #232725;
+
+  --dc-ink: #edeeeb;
+  --dc-ink-2: #b2b5b0;
+  --dc-ink-3: #82867f;
+  --dc-ink-4: #5c605a;
+
+  --dc-acc: #5bb79c;
+  --dc-acc-ink: #8ed6be;
+  --dc-acc-soft: rgb(91 183 156 / 0.18);
+  --dc-acc-mid: rgb(91 183 156 / 0.45);
+
+  --dc-run: #242a27;
+  --dc-run-line: #333a36;
+  --dc-hint: rgb(91 183 156 / 0.09);
+
+  --dc-sun: #ef8175;
+  --dc-sat: #86a9e8;
+}
+
+@theme inline {
+  --color-canvas: var(--dc-canvas);
+  --color-surface: var(--dc-surface);
+  --color-field: var(--dc-field);
+  --color-line: var(--dc-line);
+  --color-line-soft: var(--dc-line-soft);
+
+  --color-ink: var(--dc-ink);
+  --color-ink-2: var(--dc-ink-2);
+  --color-ink-3: var(--dc-ink-3);
+  --color-ink-4: var(--dc-ink-4);
+
+  --color-acc: var(--dc-acc);
+  --color-acc-ink: var(--dc-acc-ink);
+  --color-acc-soft: var(--dc-acc-soft);
+  --color-acc-mid: var(--dc-acc-mid);
+
+  --color-run: var(--dc-run);
+  --color-run-line: var(--dc-run-line);
+  --color-hint: var(--dc-hint);
+
+  --color-sun: var(--dc-sun);
+  --color-sat: var(--dc-sat);
 
   --font-sans:
     'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI',
     'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-
-  --shadow-lift: 0 1px 2px rgb(20 32 27 / 0.04), 0 8px 24px -12px rgb(20 32 27 / 0.14);
-  --shadow-raise: 0 2px 4px rgb(20 32 27 / 0.05), 0 18px 40px -18px rgb(20 32 27 / 0.22);
-  --shadow-deep: 0 24px 60px -24px rgb(6 37 28 / 0.45);
-}
-
-:root {
-  color-scheme: light;
 }
 
 html {
@@ -50,14 +94,31 @@ html {
 }
 
 body {
-  background-color: var(--color-ivory);
-  color: var(--color-ink);
+  background-color: var(--dc-canvas);
+  color: var(--dc-ink);
   font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  text-wrap: pretty;
 }
 
-/* 숫자 입력 스피너 숨김 (증감 버튼을 따로 제공) */
+button {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 연차 한도 슬라이더 */
+input[type='range'] {
+  accent-color: var(--dc-acc);
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+/* 숫자 입력 스피너 숨김 */
 input[type='number']::-webkit-outer-spin-button,
 input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -68,72 +129,26 @@ input[type='number'] {
   appearance: textfield;
 }
 
-/* 포커스 링을 팔레트에 맞춤 */
 :focus-visible {
-  outline: 2px solid var(--color-forest-600);
+  outline: 2px solid var(--dc-acc);
   outline-offset: 2px;
 }
 
-@utility display {
-  letter-spacing: -0.035em;
-  font-weight: 800;
-  line-height: 1.08;
+/* 접이식 설정 섹션의 기본 삼각형 마커 제거 */
+summary {
+  cursor: pointer;
+  list-style: none;
+}
+summary::-webkit-details-marker {
+  display: none;
 }
 
 @utility numeral {
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
-  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
-/* 라벨용 소형 대문자 스타일 */
-@utility eyebrow {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-/* 히어로의 미세한 격자 무늬 */
-@utility grid-veil {
-  background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
-  background-size: 56px 56px;
-}
-
-/* 결과 전환 애니메이션 */
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-@keyframes pop {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.35;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-.animate-fade-up {
-  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.animate-pop {
-  animation: pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-up,
-  .animate-pop {
-    animation: none;
-  }
   html {
     scroll-behavior: auto;
   }

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js"></script>
+<style>
+:root{
+  --bg:#F1F1EF; --surface:#FCFCFB; --field:#FFFFFF; --line:#D9D9D4; --line-soft:#E6E6E1;
+  --text:#1E1F1E; --text-2:#484A48; --text-3:#75776F; --text-4:#A0A29A;
+  --acc:#1F6F5C; --acc-ink:#14503F; --acc-soft:rgba(31,111,92,0.14); --acc-mid:rgba(31,111,92,0.38);
+  --run:#E4E4DE; --run-line:#C9C9C1;
+}
+:root[data-theme="dark"]{
+  --bg:#101211; --surface:#171A18; --field:#1D211F; --line:#2B302D; --line-soft:#232725;
+  --text:#EDEEEB; --text-2:#B2B5B0; --text-3:#82867F; --text-4:#5C605A;
+  --acc:#5BB79C; --acc-ink:#8ED6BE; --acc-soft:rgba(91,183,156,0.18); --acc-mid:rgba(91,183,156,0.45);
+  --run:#242A27; --run-line:#333A36;
+}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;text-wrap:pretty}
+*{box-sizing:border-box}
+a{color:var(--acc);text-decoration:none}
+a:hover{color:var(--acc-ink)}
+button{font-family:inherit;font-variant-numeric:tabular-nums;cursor:pointer}
+input{font-family:inherit;font-variant-numeric:tabular-nums;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:4px}
+input[type="range"]{accent-color:var(--acc);width:100%;height:20px;margin:0;padding:0;background:transparent;border:none}
+input:focus{outline:1px solid var(--acc-mid);outline-offset:0}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--bg)">
+
+  <header style="position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;height:46px;padding:0 14px;background:var(--bg);border-bottom:1px solid var(--line)">
+    <div style="display:flex;align-items:baseline;gap:7px;min-width:0">
+      <span style="font-size:13px;font-weight:600;letter-spacing:-0.01em">2027 연차 계획</span>
+      <span style="font-size:12px;font-weight:500;color:var(--text-3)">{{ headerStat }}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onClick="{{ copySummary }}" style="height:28px;padding:0 10px;font-size:12px;font-weight:500;color:var(--text-2);background:var(--surface);border:1px solid var(--line);border-radius:5px">{{ copyLabel }}</button>
+      <button onClick="{{ toggleTheme }}" style="height:28px;padding:0 10px;font-size:12px;font-weight:500;color:var(--text-2);background:var(--surface);border:1px solid var(--line);border-radius:5px">{{ themeLabel }}</button>
+      <button onClick="{{ saveImage }}" style="height:28px;padding:0 11px;font-size:12px;font-weight:600;color:var(--bg);background:var(--text);border:1px solid var(--text);border-radius:5px">{{ saveLabel }}</button>
+    </div>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;max-width:1280px;margin:0 auto;padding:14px">
+
+    <section style="flex:1 1 300px;position:sticky;top:60px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden">
+
+      <div style="display:flex;flex-direction:column;gap:9px;padding:13px 14px">
+        <span style="font-size:12px;font-weight:600;color:var(--text-2)">연차 계산기</span>
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:500;color:var(--text-3)">입사일
+          <input type="date" value="{{ hire }}" onChange="{{ onHire }}" style="width:150px;height:28px;padding:0 7px;font-size:12px">
+        </label>
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:500;color:var(--text-3)">이미 쓴 연차
+          <span style="display:flex;align-items:center;gap:5px"><input type="number" min="0" max="30" value="{{ usedAlready }}" onChange="{{ onUsed }}" style="width:56px;height:28px;padding:0 7px;font-size:12px;text-align:right"><span style="font-size:12px;color:var(--text-3)">일</span></span>
+        </label>
+        <div style="display:flex;flex-direction:column;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:6px;overflow:hidden">
+          <sc-for list="{{ calcRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--surface)">
+              <span style="font-size:12px;font-weight:500;color:var(--text-3)">{{ r.k }}</span>
+              <span style="{{ r.vStyle }}">{{ r.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <button onClick="{{ applyRemain }}" style="height:29px;font-size:12px;font-weight:500;color:var(--acc-ink);background:var(--acc-soft);border:1px solid var(--acc-mid);border-radius:5px">잔여 연차로 계획 세우기</button>
+        <span style="font-size:11px;font-weight:500;line-height:1.5;color:var(--text-4)">근로기준법 기준 추정치입니다. 회사 규정(회계연도 기준 등)에 따라 다를 수 있습니다.</span>
+      </div>
+
+      <div style="height:1px;background:var(--line-soft)"></div>
+
+      <div style="display:flex;flex-direction:column;gap:11px;padding:13px 14px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <span style="font-size:12px;font-weight:600;color:var(--text-2)">계획에 쓸 연차</span>
+          <span style="display:flex;align-items:baseline;gap:2px"><span style="font-size:22px;font-weight:600;line-height:1;letter-spacing:-0.02em">{{ leave }}</span><span style="font-size:12px;font-weight:500;color:var(--text-3)">일</span></span>
+        </div>
+        <input type="range" min="1" max="25" step="1" value="{{ leave }}" onChange="{{ onLeave }}" onInput="{{ onLeave }}">
+        <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span style="font-size:12px;font-weight:500;color:var(--text-3)">{{ g.label }}</span>
+            <div style="display:flex;gap:0;padding:2px;background:var(--bg);border:1px solid var(--line-soft);border-radius:5px">
+              <sc-for list="{{ g.opts }}" as="o" hint-placeholder-count="3">
+                <button onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:500;color:var(--text-3)">토요일 근무
+          <input type="checkbox" checked="{{ satWork }}" onChange="{{ onSat }}" style="width:15px;height:15px;accent-color:var(--acc)">
+        </label>
+      </div>
+
+      <div style="height:1px;background:var(--line-soft)"></div>
+
+      <div style="display:flex;flex-direction:column;gap:9px;padding:13px 14px">
+        <span style="font-size:12px;font-weight:600;color:var(--text-2)">휴일 직접 추가</span>
+        <div style="display:flex;gap:6px">
+          <input type="date" min="2027-01-01" max="2027-12-31" value="{{ newDate }}" onChange="{{ onNewDate }}" style="flex:1;height:28px;padding:0 7px;font-size:12px;min-width:0">
+          <input type="text" placeholder="창립기념일" value="{{ newName }}" onChange="{{ onNewName }}" style="width:88px;height:28px;padding:0 8px;font-size:12px">
+          <button onClick="{{ addHoliday }}" style="width:30px;height:28px;font-size:14px;font-weight:500;color:var(--text-2);background:var(--bg);border:1px solid var(--line);border-radius:5px">+</button>
+        </div>
+        <sc-for list="{{ extraList }}" as="x" hint-placeholder-count="0">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;background:var(--bg);border:1px solid var(--line-soft);border-radius:5px">
+            <span style="font-size:12px;font-weight:500;color:var(--text-2)">{{ x.label }}</span>
+            <button onClick="{{ x.onRemove }}" style="width:20px;height:20px;padding:0;font-size:13px;color:var(--text-4);background:transparent;border:none">×</button>
+          </div>
+        </sc-for>
+      </div>
+
+    </section>
+
+    <section style="flex:3 1 600px;display:flex;flex-direction:column;gap:12px;min-width:0">
+
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+        <span style="font-size:12px;font-weight:600;color:var(--text-2)">추천 조합</span>
+        <span style="font-size:12px;font-weight:500;color:var(--text-3)">{{ pickSummary }}</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--line)">
+          <span style="width:26px;flex:none;font-size:11px;font-weight:500;color:var(--text-4)">#</span>
+          <span style="flex:1;min-width:0;font-size:11px;font-weight:500;color:var(--text-4)">기간</span>
+          <span style="width:56px;flex:none;text-align:right;font-size:11px;font-weight:500;color:var(--text-4)">쉬는 날</span>
+          <span style="width:46px;flex:none;text-align:right;font-size:11px;font-weight:500;color:var(--text-4)">연차</span>
+          <span style="width:42px;flex:none;text-align:right;font-size:11px;font-weight:500;color:var(--text-4)">배수</span>
+        </div>
+        <sc-for list="{{ picks }}" as="p" hint-placeholder-count="3">
+          <div onMouseEnter="{{ p.onEnter }}" onMouseLeave="{{ p.onLeave }}" style="{{ p.rowStyle }}">
+            <span style="width:26px;flex:none;font-size:12px;font-weight:500;color:var(--text-4)">{{ p.idx }}</span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:13px;font-weight:600;letter-spacing:-0.01em;color:var(--text)">{{ p.rangeLabel }}</span>
+              <span style="font-size:11.5px;font-weight:500;line-height:1.4;color:var(--text-3)">{{ p.leaveLabel }}</span>
+            </div>
+            <span style="width:56px;flex:none;text-align:right;display:flex;align-items:baseline;justify-content:flex-end;gap:2px"><span style="font-size:20px;font-weight:600;line-height:1;letter-spacing:-0.02em;color:var(--text)">{{ p.total }}</span><span style="font-size:11px;font-weight:500;color:var(--text-3)">일</span></span>
+            <span style="width:46px;flex:none;text-align:right;font-size:13px;font-weight:500;color:var(--text-2)">{{ p.cost }}일</span>
+            <span style="width:42px;flex:none;text-align:right;font-size:12px;font-weight:600;color:var(--acc)">{{ p.effLabel }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:16px 12px;font-size:12px;font-weight:500;color:var(--text-3)">조건에 맞는 조합이 없습니다. 최소 연휴 길이를 낮추거나 연차를 늘려보세요.</div>
+        </sc-if>
+      </div>
+
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-top:2px">
+        <span style="font-size:12px;font-weight:600;color:var(--text-2)">연간 달력</span>
+        <div style="display:flex;gap:12px">
+          <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--text-3)"><span style="width:14px;text-align:center;font-weight:600;color:var(--acc)">1</span>공휴일</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--text-3)"><span style="display:flex;align-items:center;justify-content:center;width:16px;height:15px;border-radius:3px;font-weight:600;color:var(--acc-ink);background:var(--acc-soft);border:1px solid var(--acc-mid)">2</span>연차</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--text-3)"><span style="width:20px;height:9px;border-radius:4px;background:var(--run);border:1px solid var(--run-line)"></span>연휴</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+          <div style="flex:1 1 200px;min-width:186px;display:flex;flex-direction:column;gap:6px;padding:11px 11px 9px;background:var(--surface);border:1px solid var(--line);border-radius:8px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between">
+              <span style="font-size:12.5px;font-weight:600;letter-spacing:-0.01em">{{ m.label }}</span>
+              <span style="{{ m.tagStyle }}">{{ m.tag }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+              <sc-for list="{{ dowShort }}" as="w" hint-placeholder-count="7">
+                <span style="text-align:center;font-size:10px;font-weight:500;color:var(--text-4)">{{ w }}</span>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ m.weeks }}" as="wk" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+                  <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+                    <div style="position:relative;height:28px;display:flex;align-items:center;justify-content:center">
+                      <div style="{{ c.runStyle }}"></div>
+                      <span style="{{ c.numStyle }}">{{ c.day }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:5px 14px;padding:2px 0 24px">
+        <sc-for list="{{ holidayList }}" as="h" hint-placeholder-count="12">
+          <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--text-3)"><span style="font-weight:600;color:var(--text-2)">{{ h.date }}</span>{{ h.name }}</span>
+        </sc-for>
+      </div>
+
+    </section>
+  </div>
+
+  <sc-if value="{{ shareMounted }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;top:0;left:-4000px;pointer-events:none">
+      <div ref="{{ shareRef }}" style="width:960px;padding:48px;background:var(--bg)">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding-bottom:18px;border-bottom:1px solid var(--line)">
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <span style="font-size:14px;font-weight:500;letter-spacing:0.04em;color:var(--text-3)">2027 연차 계획</span>
+            <span style="font-size:32px;font-weight:600;letter-spacing:-0.03em;color:var(--text)">{{ shareHeadline }}</span>
+          </div>
+          <span style="font-size:13px;font-weight:500;color:var(--text-3)">{{ shareStrategy }}</span>
+        </div>
+        <sc-for list="{{ picks }}" as="p" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:24px;padding:18px 0;border-bottom:1px solid var(--line-soft)">
+            <span style="display:flex;align-items:baseline;gap:3px;width:110px;flex:none"><span style="font-size:36px;font-weight:600;line-height:0.95;letter-spacing:-0.03em;color:var(--text)">{{ p.total }}</span><span style="font-size:14px;font-weight:500;color:var(--text-3)">일</span></span>
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
+              <span style="font-size:17px;font-weight:600;color:var(--text)">{{ p.rangeLabel }}</span>
+              <span style="font-size:13px;font-weight:500;color:var(--text-3)">{{ p.leaveLabel }}</span>
+            </div>
+            <div style="flex:none;display:flex;flex-direction:column;gap:2px;width:250px">
+              <sc-for list="{{ p.weeks }}" as="wk" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+                  <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+                    <div style="position:relative;height:26px;display:flex;align-items:center;justify-content:center">
+                      <div style="{{ c.runStyle }}"></div>
+                      <span style="{{ c.numStyle }}">{{ c.day }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display:flex;justify-content:space-between;padding-top:16px">
+          <span style="font-size:13px;font-weight:500;color:var(--text-3)">{{ shareFoot }}</span>
+          <span style="font-size:13px;font-weight:500;color:var(--acc)">연차 최적화 캘린더</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultLeave&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:5,&quot;min&quot;:1,&quot;max&quot;:25,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;기본값&quot;},&quot;startDark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;기본값&quot;}}">
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = {
+      leave: p.defaultLeave || 5, dark: !!p.startDark, strategy: 'spread', minLen: 4, half: 'all', satWork: false,
+      hire: '2021-03-02', usedAlready: 0, extra: {}, newDate: '', newName: '',
+      hover: -1, core: null, saving: false, shareMounted: false, copied: false
+    };
+    this.shareRef = React.createRef();
+  }
+  componentDidMount() {
+    this.applyTheme(this.state.dark);
+    import('./core.js').then(m => this.setState({ core: m }));
+  }
+  applyTheme(dark) { document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light'); }
+
+  seg(value, key) {
+    const on = value === key;
+    return {
+      height: '25px', padding: '0 9px', fontSize: '12px', fontWeight: on ? 600 : 500,
+      color: on ? 'var(--text)' : 'var(--text-3)',
+      background: on ? 'var(--surface)' : 'transparent',
+      border: '1px solid ' + (on ? 'var(--line)' : 'transparent'),
+      borderRadius: '4px'
+    };
+  }
+
+  cellStyles(days, blocks, i, bi, prevSame, nextSame, active) {
+    const D = days[i];
+    const isLeave = bi >= 0 && blocks[bi].leaveSet.has(i);
+    const numStyle = {
+      position: 'relative', fontSize: '12px', lineHeight: 1,
+      fontWeight: D.hol || isLeave ? 600 : 500,
+      color: D.hol ? 'var(--acc)' : isLeave ? 'var(--acc-ink)' : D.weekend ? 'var(--text-3)' : 'var(--text)'
+    };
+    let runStyle = { display: 'none' };
+    if (bi >= 0) {
+      const l = !prevSame, r = !nextSame;
+      const edge = active ? 'var(--acc-mid)' : 'var(--run-line)';
+      runStyle = {
+        position: 'absolute', top: '1px', bottom: '1px', left: 0, right: 0,
+        background: isLeave ? 'var(--acc-soft)' : 'var(--run)',
+        borderTop: '1px solid ' + edge, borderBottom: '1px solid ' + edge,
+        borderLeft: l ? '1px solid ' + edge : 'none', borderRight: r ? '1px solid ' + edge : 'none',
+        borderTopLeftRadius: l ? '6px' : 0, borderBottomLeftRadius: l ? '6px' : 0,
+        borderTopRightRadius: r ? '6px' : 0, borderBottomRightRadius: r ? '6px' : 0,
+        boxShadow: active ? 'inset 0 0 0 1px var(--acc-mid)' : 'none'
+      };
+    }
+    return { key: D.key, day: String(D.d), runStyle, numStyle };
+  }
+
+  weeks(days, blocks, blockOf, from, to, tag) {
+    const cells = [];
+    for (let k = 0; k < days[from].dow; k++) cells.push(null);
+    for (let i = from; i <= to; i++) cells.push(i);
+    while (cells.length % 7) cells.push(null);
+    const out = [];
+    for (let w = 0; w < cells.length; w += 7) {
+      const row = cells.slice(w, w + 7).map((i, ci) => {
+        if (i === null) return { key: 'e' + tag + w + ci, day: '', runStyle: { display: 'none' }, numStyle: { fontSize: '12px', color: 'transparent' } };
+        const bi = blockOf[i] === undefined ? -1 : blockOf[i];
+        const p = cells[w + ci - 1], n = cells[w + ci + 1];
+        const ps = ci > 0 && p != null && blockOf[p] === bi;
+        const ns = ci < 6 && n != null && blockOf[n] === bi;
+        const c = this.cellStyles(days, blocks, i, bi, ps, ns, bi >= 0 && this.state.hover === bi);
+        return { ...c, key: c.key + tag };
+      });
+      out.push({ key: 'w' + tag + w, cells: row });
+    }
+    return out;
+  }
+
+  async save() {
+    if (!window.htmlToImage) return;
+    this.setState({ saving: true, shareMounted: true });
+    await new Promise(r => requestAnimationFrame(() => setTimeout(r, 90)));
+    const node = this.shareRef.current;
+    if (node) {
+      try {
+        const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+        const url = await window.htmlToImage.toPng(node, { pixelRatio: 2, backgroundColor: bg });
+        const a = document.createElement('a');
+        a.href = url; a.download = '2027-연차계획.png'; a.click();
+      } catch (e) { console.error(e); }
+    }
+    this.setState({ saving: false, shareMounted: false });
+  }
+
+  async copy(text) {
+    try { await navigator.clipboard.writeText(text); } catch (e) { console.error(e); }
+    this.setState({ copied: true });
+    setTimeout(() => this.setState({ copied: false }), 1400);
+  }
+
+  renderVals() {
+    const st = this.state, C = st.core;
+    const base = {
+      leave: String(st.leave),
+      hire: st.hire,
+      usedAlready: String(st.usedAlready),
+      newDate: st.newDate,
+      newName: st.newName,
+      satWork: st.satWork,
+      dowShort: ['일', '월', '화', '수', '목', '금', '토'],
+      themeLabel: st.dark ? '라이트' : '다크',
+      toggleTheme: () => { const d = !this.state.dark; this.applyTheme(d); this.setState({ dark: d }); },
+      saveLabel: st.saving ? '저장 중' : '이미지 저장',
+      copyLabel: st.copied ? '복사됨' : '요약 복사',
+      saveImage: () => this.save(),
+      shareRef: this.shareRef,
+      shareMounted: st.shareMounted,
+      onLeave: e => this.setState({ leave: +e.target.value, hover: -1 }),
+      onHire: e => this.setState({ hire: e.target.value }),
+      onUsed: e => this.setState({ usedAlready: Math.max(0, +e.target.value || 0) }),
+      onSat: e => this.setState({ satWork: e.target.checked, hover: -1 }),
+      onNewDate: e => this.setState({ newDate: e.target.value }),
+      onNewName: e => this.setState({ newName: e.target.value }),
+      addHoliday: () => {
+        const d = this.state.newDate;
+        if (!d || d < '2027-01-01' || d > '2027-12-31') return;
+        this.setState({
+          extra: { ...this.state.extra, [d]: this.state.newName.trim() || '회사 휴일' },
+          newDate: '', newName: '', hover: -1
+        });
+      },
+      groups: [
+        { key: 'g1', label: '전략', opts: [['spread', '나눠 쓰기'], ['burst', '몰아 쓰기']].map(([v, l]) => ({ key: v, label: l, onClick: () => this.setState({ strategy: v, hover: -1 }), style: this.seg(st.strategy, v) })) },
+        { key: 'g2', label: '최소 연휴', opts: [[4, '4일'], [5, '5일'], [7, '7일']].map(([v, l]) => ({ key: 'm' + v, label: l, onClick: () => this.setState({ minLen: v, hover: -1 }), style: this.seg(st.minLen, v) })) },
+        { key: 'g3', label: '시기', opts: [['all', '전체'], ['h1', '상반기'], ['h2', '하반기']].map(([v, l]) => ({ key: 'h' + v, label: l, onClick: () => this.setState({ half: v, hover: -1 }), style: this.seg(st.half, v) })) }
+      ],
+      extraList: Object.keys(st.extra).sort().map(k => ({
+        key: k,
+        label: (+k.slice(5, 7)) + '월 ' + (+k.slice(8, 10)) + '일 · ' + st.extra[k],
+        onRemove: () => { const e = { ...this.state.extra }; delete e[k]; this.setState({ extra: e, hover: -1 }); }
+      }))
+    };
+    if (!C) return { ...base, headerStat: '', calcRows: [], picks: [], months: [], holidayList: [], pickSummary: '', isEmpty: false, applyRemain: () => {}, copySummary: () => {}, shareHeadline: '', shareStrategy: '', shareFoot: '' };
+
+    const stat = C.statutoryLeave(st.hire);
+    const granted = stat ? stat.days : 0;
+    const remain = Math.max(0, granted - st.usedAlready);
+
+    const extra = Object.keys(st.extra).length ? st.extra : null;
+    const { days, blocks } = C.plan({ leave: st.leave, strategy: st.strategy, minLen: st.minLen, half: st.half, extra, satWork: st.satWork });
+    const blockOf = {};
+    blocks.forEach((b, bi) => { for (let i = b.s; i <= b.e; i++) blockOf[i] = bi; });
+    const used = blocks.reduce((s, b) => s + b.cost, 0);
+    const rest = blocks.reduce((s, b) => s + b.total, 0);
+    const fmt = i => (days[i].m + 1) + '.' + days[i].d;
+    const fmtD = i => fmt(i) + '(' + C.dowKo[days[i].dow] + ')';
+
+    const picks = blocks.map((b, bi) => {
+      const active = st.hover === bi;
+      const ws = Math.max(0, b.s - days[b.s].dow);
+      const we = Math.min(days.length - 1, b.e + (6 - days[b.e].dow));
+      return {
+        key: 'p' + b.s,
+        idx: String(bi + 1),
+        total: String(b.total),
+        cost: String(b.cost),
+        rangeLabel: fmtD(b.s) + ' – ' + fmtD(b.e),
+        leaveLabel: '연차 ' + b.leaveIdx.map(fmtD).join(', '),
+        effLabel: '×' + (Math.round(b.total / b.cost * 10) / 10).toFixed(1),
+        onEnter: () => this.setState({ hover: bi }),
+        onLeave: () => this.setState({ hover: -1 }),
+        weeks: this.weeks(days, blocks, blockOf, ws, we, 's' + bi),
+        rowStyle: {
+          display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 12px',
+          background: active ? 'var(--bg)' : 'var(--surface)',
+          borderTop: bi === 0 ? 'none' : '1px solid var(--line-soft)',
+          boxShadow: active ? 'inset 2px 0 0 var(--acc)' : 'none'
+        }
+      };
+    });
+
+    const months = C.MONTHS.map((label, m) => {
+      const from = days.findIndex(d => d.m === m);
+      let to = from; while (to + 1 < days.length && days[to + 1].m === m) to++;
+      const mB = blocks.filter(b => days[b.s].m === m || days[b.e].m === m);
+      const best = mB.reduce((a, b) => (a && a.total >= b.total ? a : b), null);
+      return {
+        key: 'M' + m, label,
+        tag: best ? best.total + '일' : '',
+        tagStyle: {
+          fontSize: '11px', fontWeight: 600, padding: best ? '1px 6px' : 0, borderRadius: '4px',
+          color: best ? 'var(--acc-ink)' : 'transparent',
+          background: best ? 'var(--acc-soft)' : 'transparent'
+        },
+        weeks: this.weeks(days, blocks, blockOf, from, to, 'y' + m)
+      };
+    });
+
+    const summaryText = '2027 연차 계획 — 연차 ' + used + '일로 ' + rest + '일 휴식\n'
+      + picks.map(p => '· ' + p.rangeLabel + ' (' + p.total + '일 / 연차 ' + p.cost + '일)\n  ' + p.leaveLabel).join('\n');
+
+    return {
+      ...base,
+      headerStat: '연차 ' + used + '일 · 휴식 ' + rest + '일',
+      calcRows: [
+        { key: 'c1', k: '발생 연차', v: stat ? granted + '일' : '입사일 입력', vStyle: { fontSize: '13px', fontWeight: 600, color: 'var(--text)' } },
+        { key: 'c2', k: '근속', v: stat ? stat.note : '–', vStyle: { fontSize: '12px', fontWeight: 500, color: 'var(--text-3)' } },
+        { key: 'c3', k: '잔여 연차', v: remain + '일', vStyle: { fontSize: '13px', fontWeight: 600, color: 'var(--acc)' } }
+      ],
+      applyRemain: () => this.setState({ leave: Math.max(1, Math.min(25, remain)), hover: -1 }),
+      copySummary: () => this.copy(summaryText),
+      picks, months,
+      isEmpty: picks.length === 0,
+      pickSummary: picks.length ? picks.length + '개 구간 · 연차 ' + used + '일 → ' + rest + '일 휴식' : '결과 없음',
+      holidayList: days.filter(d => d.hol).map(d => ({ key: d.key, date: (d.m + 1) + '.' + d.d, name: d.hol })),
+      shareHeadline: '연차 ' + used + '일로 ' + rest + '일 휴식',
+      shareStrategy: (st.strategy === 'spread' ? '나눠 쓰기' : '몰아 쓰기') + ' · 최소 ' + st.minLen + '일',
+      shareFoot: '2027년 공휴일' + (extra ? ' + 회사 휴일 ' + Object.keys(st.extra).length + '일' : '') + ' 기준'
+    };
+  }
+}
+</script>
+</body>
+</html>

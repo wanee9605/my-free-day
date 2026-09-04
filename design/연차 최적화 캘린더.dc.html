@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js"></script>
+<style>
+:root{
+  --bg:#F2F2EF; --surface:#FFFFFF; --surface-2:#ECECE8; --line:#D5D5D0; --line-soft:#E3E3DE;
+  --text:#1B1B1F; --text-2:#44444A; --text-3:#74747A; --text-4:#9C9CA1;
+  --accent:#B5462C; --accent-strong:#8F3521; --accent-soft:rgba(181,70,44,0.20); --accent-mid:rgba(181,70,44,0.45);
+  --run:#E2DDD9; --run-line:#C9BFB9; --shadow:0 1px 2px rgba(20,20,20,0.05);
+}
+:root[data-theme="dark"]{
+  --bg:#0E0E11; --surface:#18181C; --surface-2:#222227; --line:#33333A; --line-soft:#2A2A30;
+  --text:#F2F2EF; --text-2:#B4B4BA; --text-3:#87878E; --text-4:#61616A;
+  --accent:#F98A6C; --accent-strong:#FFA98F; --accent-soft:rgba(249,138,108,0.26); --accent-mid:rgba(249,138,108,0.5);
+  --run:#2C2A31; --run-line:#413A3E; --shadow:0 1px 2px rgba(0,0,0,0.4);
+}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;text-wrap:pretty}
+*{box-sizing:border-box}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-strong)}
+button{font-family:inherit;font-variant-numeric:tabular-nums}
+input[type="range"]{accent-color:var(--accent);width:100%;height:22px;margin:0}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--bg)">
+
+  <header style="position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;height:52px;background:var(--bg);border-bottom:1px solid var(--line)">
+    <div style="display:flex;align-items:baseline;gap:8px;min-width:0">
+      <span style="font-size:13px;font-weight:700;letter-spacing:-0.01em;color:var(--text)">연차 최적화</span>
+      <span style="font-size:12px;font-weight:500;color:var(--text-3)">2027</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onClick="{{ toggleTheme }}" style="display:flex;align-items:center;height:30px;padding:0 10px;font-size:12px;font-weight:500;color:var(--text-2);background:var(--surface);border:1px solid var(--line);border-radius:7px;cursor:pointer" style-hover="border-color:var(--text-4);color:var(--text)">{{ themeLabel }}</button>
+      <button onClick="{{ saveImage }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;font-size:12px;font-weight:600;color:var(--surface);background:var(--text);border:1px solid var(--text);border-radius:7px;cursor:pointer" style-hover="opacity:0.85">{{ saveLabel }}</button>
+    </div>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;max-width:1280px;margin:0 auto;padding:16px">
+
+    <section style="flex:1 1 300px;position:sticky;top:68px;display:flex;flex-direction:column;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)">
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <span style="font-size:11.5px;font-weight:700;letter-spacing:0.03em;color:var(--text-2)">쓸 수 있는 연차</span>
+          <span style="display:flex;align-items:baseline;gap:2px"><span style="font-size:26px;font-weight:700;line-height:1;letter-spacing:-0.03em;color:var(--text)">{{ leave }}</span><span style="font-size:12px;font-weight:600;color:var(--text-3)">일</span></span>
+        </div>
+        <input type="range" min="1" max="20" step="1" value="{{ leave }}" onChange="{{ onLeave }}" onInput="{{ onLeave }}">
+        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:500;color:var(--text-4)"><span>1</span><span>10</span><span>20</span></div>
+      </div>
+
+      <div style="height:1px;background:var(--line-soft)"></div>
+
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <span style="font-size:11.5px;font-weight:700;letter-spacing:0.03em;color:var(--text-2)">전략</span>
+        <div style="display:flex;gap:0;padding:2px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:8px">
+          <sc-for list="{{ strategyOpts }}" as="o" hint-placeholder-count="2">
+            <button onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</button>
+          </sc-for>
+        </div>
+        <span style="font-size:11px;font-weight:500;line-height:1.5;color:var(--text-3)">{{ strategyHint }}</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <span style="font-size:11.5px;font-weight:700;letter-spacing:0.03em;color:var(--text-2)">최소 연휴 길이</span>
+        <div style="display:flex;gap:0;padding:2px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:8px">
+          <sc-for list="{{ minLenOpts }}" as="o" hint-placeholder-count="3">
+            <button onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <span style="font-size:11.5px;font-weight:700;letter-spacing:0.03em;color:var(--text-2)">시기</span>
+        <div style="display:flex;gap:0;padding:2px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:8px">
+          <sc-for list="{{ halfOpts }}" as="o" hint-placeholder-count="3">
+            <button onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--line-soft)"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:9px;overflow:hidden">
+        <div style="display:flex;flex-direction:column;gap:3px;padding:11px 12px;background:var(--surface)">
+          <span style="font-size:10px;font-weight:600;letter-spacing:0.03em;color:var(--text-3)">사용 연차</span>
+          <span style="display:flex;align-items:baseline;gap:2px"><span style="font-size:19px;font-weight:700;line-height:1;color:var(--text)">{{ usedLeave }}</span><span style="font-size:11px;font-weight:600;color:var(--text-3)">/ {{ leave }}일</span></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;padding:11px 12px;background:var(--surface)">
+          <span style="font-size:10px;font-weight:600;letter-spacing:0.03em;color:var(--text-3)">총 휴식</span>
+          <span style="display:flex;align-items:baseline;gap:2px"><span style="font-size:19px;font-weight:700;line-height:1;color:var(--accent)">{{ totalRest }}</span><span style="font-size:11px;font-weight:600;color:var(--text-3)">일</span></span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:6px;padding-top:2px">
+        <span style="font-size:11.5px;font-weight:700;letter-spacing:0.03em;color:var(--text-2)">범례</span>
+        <div style="display:flex;flex-wrap:wrap;gap:10px 14px">
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--text-2)"><span style="width:16px;text-align:center;font-size:11px;font-weight:700;color:var(--accent)">15</span>공휴일</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--text-2)"><span style="display:flex;align-items:center;justify-content:center;width:18px;height:16px;border-radius:5px;font-size:11px;font-weight:700;color:var(--accent-strong);background:var(--accent-soft);border:1px solid var(--accent-mid)">16</span>연차</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--text-2)"><span style="width:16px;text-align:center;font-size:11px;font-weight:500;color:var(--text-3)">17</span>주말</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--text-2)"><span style="width:22px;height:10px;border-radius:5px;background:var(--run);border:1px solid var(--run-line)"></span>연휴 구간</span>
+        </div>
+      </div>
+
+    </section>
+
+    <section style="flex:3 1 600px;display:flex;flex-direction:column;gap:16px;min-width:0">
+
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+        <span style="font-size:13px;font-weight:700;letter-spacing:-0.01em;color:var(--text)">추천 조합</span>
+        <span style="font-size:11px;font-weight:500;color:var(--text-3)">{{ pickSummary }}</span>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <sc-for list="{{ picks }}" as="p" hint-placeholder-count="3">
+          <div onMouseEnter="{{ p.onEnter }}" onMouseLeave="{{ p.onLeave }}" onClick="{{ p.onEnter }}" style="{{ p.cardStyle }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <span style="font-size:11px;font-weight:600;letter-spacing:0.02em;color:var(--text-3)">{{ p.monthLabel }}</span>
+              <span style="{{ p.badgeStyle }}">{{ p.effLabel }}</span>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:8px">
+              <span style="display:flex;align-items:baseline;gap:3px"><span style="font-size:46px;font-weight:700;line-height:0.9;letter-spacing:-0.045em;color:var(--text)">{{ p.total }}</span><span style="font-size:15px;font-weight:600;color:var(--text-2)">일</span></span>
+              <span style="padding-bottom:5px;font-size:12px;font-weight:600;color:var(--text-3)">연차 {{ p.cost }}일</span>
+            </div>
+            <span style="font-size:13px;font-weight:600;color:var(--text)">{{ p.rangeLabel }}</span>
+            <div style="display:flex;flex-direction:column;gap:3px;padding-top:2px">
+              <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+                <sc-for list="{{ dowShort }}" as="w" hint-placeholder-count="7">
+                  <span style="text-align:center;font-size:10.5px;font-weight:600;letter-spacing:0.01em;color:var(--text-3)">{{ w }}</span>
+                </sc-for>
+              </div>
+              <sc-for list="{{ p.weeks }}" as="wk" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+                  <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+                    <div style="position:relative;height:27px;display:flex;align-items:center;justify-content:center">
+                      <div style="{{ c.runStyle }}"></div>
+                      <span style="{{ c.numStyle }}">{{ c.day }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+            <span style="font-size:12px;font-weight:500;line-height:1.45;color:var(--text-2)">{{ p.leaveLabel }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:22px;font-size:12px;font-weight:500;color:var(--text-3);background:var(--surface);border:1px dashed var(--line);border-radius:12px">조건에 맞는 조합이 없습니다. 최소 연휴 길이를 낮추거나 연차를 늘려보세요.</div>
+      </sc-if>
+
+      <div style="height:1px;background:var(--line)"></div>
+
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+        <span style="font-size:13px;font-weight:700;letter-spacing:-0.01em;color:var(--text)">2027 연간 달력</span>
+        <span style="font-size:11px;font-weight:500;color:var(--text-3)">공휴일 {{ holidayCount }}일</span>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+          <div style="flex:1 1 210px;min-width:190px;display:flex;flex-direction:column;gap:6px;padding:12px 12px 10px;background:var(--surface);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow)">
+            <div style="display:flex;align-items:baseline;justify-content:space-between">
+              <span style="font-size:13px;font-weight:700;letter-spacing:-0.01em;color:var(--text)">{{ m.label }}</span>
+              <span style="{{ m.tagStyle }}">{{ m.tag }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+              <sc-for list="{{ dowShort }}" as="w" hint-placeholder-count="7">
+                <span style="text-align:center;font-size:10.5px;font-weight:600;letter-spacing:0.01em;color:var(--text-3)">{{ w }}</span>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ m.weeks }}" as="wk" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+                  <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+                    <div style="position:relative;height:30px;display:flex;align-items:center;justify-content:center">
+                      <div style="{{ c.runStyle }}"></div>
+                      <span style="{{ c.numStyle }}">{{ c.day }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:6px 16px;padding-bottom:24px">
+        <sc-for list="{{ holidayList }}" as="h" hint-placeholder-count="12">
+          <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--text-2)"><span style="font-weight:700;color:var(--accent)">{{ h.date }}</span>{{ h.name }}</span>
+        </sc-for>
+      </div>
+
+    </section>
+  </div>
+
+  <sc-if value="{{ shareMounted }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;top:0;left:-4000px;pointer-events:none">
+    <div ref="{{ shareRef }}" style="width:1080px;padding:56px;background:var(--bg)">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:22px;border-bottom:1px solid var(--line)">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:15px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-3)">2027 연차 계획</span>
+          <span style="font-size:40px;font-weight:700;letter-spacing:-0.035em;color:var(--text)">{{ shareHeadline }}</span>
+        </div>
+        <span style="font-size:14px;font-weight:600;color:var(--text-3)">{{ shareStrategy }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0;padding-top:8px">
+        <sc-for list="{{ picks }}" as="p" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:32px;padding:22px 0;border-bottom:1px solid var(--line-soft)">
+            <span style="display:flex;align-items:baseline;gap:4px;width:150px;flex:none"><span style="font-size:56px;font-weight:700;line-height:0.9;letter-spacing:-0.04em;color:var(--text)">{{ p.total }}</span><span style="font-size:18px;font-weight:600;color:var(--text-2)">일</span></span>
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
+              <span style="font-size:19px;font-weight:600;color:var(--text)">{{ p.rangeLabel }}</span>
+              <span style="font-size:15px;font-weight:500;color:var(--text-3)">연차 {{ p.cost }}일 · {{ p.leaveLabel }}</span>
+            </div>
+            <div style="flex:none;display:flex;flex-direction:column;gap:3px;width:280px">
+              <sc-for list="{{ p.weeks }}" as="wk" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+                  <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+                    <div style="position:relative;height:30px;display:flex;align-items:center;justify-content:center">
+                      <div style="{{ c.runStyle }}"></div>
+                      <span style="{{ c.numStyle }}">{{ c.day }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding-top:22px">
+        <span style="font-size:14px;font-weight:500;color:var(--text-3)">연차 {{ usedLeave }}일 사용 · 총 {{ totalRest }}일 휴식</span>
+        <span style="font-size:14px;font-weight:600;color:var(--accent)">연차 최적화 캘린더</span>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#1F6F5C&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#B5462C&quot;,&quot;#2F5FD0&quot;,&quot;#1F6F5C&quot;,&quot;#6B4FC4&quot;],&quot;section&quot;:&quot;스타일&quot;},&quot;defaultLeave&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:5,&quot;min&quot;:1,&quot;max&quot;:20,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;기본값&quot;},&quot;startDark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;기본값&quot;}}">
+const Y = 2027;
+const HOL = {
+  '2027-01-01':'신정',
+  '2027-02-05':'설날 연휴','2027-02-06':'설날','2027-02-07':'설날 연휴','2027-02-08':'대체공휴일',
+  '2027-03-01':'삼일절',
+  '2027-05-05':'어린이날','2027-05-13':'부처님오신날',
+  '2027-06-06':'현충일','2027-06-07':'대체공휴일',
+  '2027-08-15':'광복절','2027-08-16':'대체공휴일',
+  '2027-09-14':'추석 연휴','2027-09-15':'추석','2027-09-16':'추석 연휴',
+  '2027-10-03':'개천절','2027-10-04':'대체공휴일','2027-10-09':'한글날','2027-10-11':'대체공휴일',
+  '2027-12-25':'성탄절','2027-12-27':'대체공휴일'
+};
+const pad = n => (n < 10 ? '0' + n : '' + n);
+const DAYS = (() => {
+  const out = [];
+  const d = new Date(Y, 0, 1);
+  while (d.getFullYear() === Y) {
+    const key = Y + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    const dow = d.getDay();
+    const hol = HOL[key] || null;
+    out.push({ key, m: d.getMonth(), d: d.getDate(), dow, hol, weekend: dow === 0 || dow === 6 });
+    d.setDate(d.getDate() + 1);
+  }
+  out.forEach(x => { x.off = x.weekend || !!x.hol; });
+  return out;
+})();
+
+const CANDS = (() => {
+  const n = DAYS.length, out = [];
+  for (let i = 0; i < n; i++) {
+    if (DAYS[i].off) continue;
+    let cost = 0;
+    for (let j = i; j < Math.min(n, i + 18); j++) {
+      if (!DAYS[j].off) cost++;
+      if (cost > 12) break;
+      if (DAYS[j].off) continue;
+      let s = i; while (s > 0 && DAYS[s - 1].off) s--;
+      let e = j; while (e < n - 1 && DAYS[e + 1].off) e++;
+      const leaveIdx = [];
+      for (let k = i; k <= j; k++) if (!DAYS[k].off) leaveIdx.push(k);
+      out.push({ s, e, cost, total: e - s + 1, leaveIdx });
+    }
+  }
+  const best = new Map();
+  out.forEach(c => {
+    const k = c.s + ':' + c.e;
+    const prev = best.get(k);
+    if (!prev || c.cost < prev.cost) best.set(k, c);
+  });
+  return [...best.values()];
+})();
+
+const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = {
+      leave: p.defaultLeave || 5,
+      strategy: 'spread',
+      minLen: 4,
+      half: 'all',
+      dark: !!p.startDark,
+      hover: -1,
+      saving: false
+    };
+    this.shareRef = React.createRef();
+  }
+  componentDidMount() {
+    this.applyTheme(this.state.dark);
+  }
+  applyTheme(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    const a = this.props.accentColor;
+    if (!a) return;
+    const r = document.documentElement.style;
+    const mix = (p, w) => 'color-mix(in srgb, ' + a + ' ' + p + '%, ' + w + ')';
+    r.setProperty('--accent', dark ? mix(58, '#fff') : a);
+    r.setProperty('--accent-strong', dark ? mix(42, '#fff') : mix(82, '#000'));
+    r.setProperty('--accent-soft', dark ? mix(30, 'transparent') : mix(20, 'transparent'));
+    r.setProperty('--accent-mid', dark ? mix(52, 'transparent') : mix(45, 'transparent'));
+    r.setProperty('--run-line', mix(22, 'var(--line)'));
+  }
+
+  plan() {
+    const { leave, strategy, minLen, half } = this.state;
+    let pool = CANDS.filter(c => c.total >= minLen && c.cost <= leave);
+    if (half === 'h1') pool = pool.filter(c => DAYS[c.s].m <= 5);
+    if (half === 'h2') pool = pool.filter(c => DAYS[c.s].m >= 6);
+    pool = pool.slice().sort((a, b) => {
+      if (strategy === 'burst') return (b.total - a.total) || (a.cost - b.cost);
+      const ea = a.total / a.cost, eb = b.total / b.cost;
+      return (eb - ea) || (b.total - a.total);
+    });
+    const chosen = [];
+    let budget = leave;
+    for (const c of pool) {
+      if (c.cost > budget) continue;
+      if (chosen.some(x => !(c.e < x.s - 1 || c.s > x.e + 1))) continue;
+      chosen.push(c);
+      budget -= c.cost;
+      if (budget <= 0) break;
+    }
+    return chosen.sort((a, b) => a.s - b.s);
+  }
+
+  cell(i, blockIdx, sameRowPrev, sameRowNext, active) {
+    const day = DAYS[i];
+    const inBlock = blockIdx >= 0;
+    const isLeave = inBlock && this.blocks[blockIdx].leaveSet.has(i);
+    const numStyle = {
+      position: 'relative', fontSize: '12.5px', lineHeight: 1,
+      fontWeight: day.hol || isLeave ? 700 : 600,
+      color: day.hol ? 'var(--accent)' : isLeave ? 'var(--accent-strong)' : day.weekend ? 'var(--text-3)' : 'var(--text)'
+    };
+    let runStyle = { display: 'none' };
+    if (inBlock) {
+      const l = !sameRowPrev, r = !sameRowNext;
+      runStyle = {
+        position: 'absolute', top: '1px', bottom: '1px', left: 0, right: 0,
+        background: isLeave ? 'var(--accent-soft)' : 'var(--run)',
+        borderTop: '1px solid ' + (active ? 'var(--accent-mid)' : 'var(--run-line)'),
+        borderBottom: '1px solid ' + (active ? 'var(--accent-mid)' : 'var(--run-line)'),
+        borderLeft: l ? '1px solid ' + (active ? 'var(--accent-mid)' : 'var(--run-line)') : 'none',
+        borderRight: r ? '1px solid ' + (active ? 'var(--accent-mid)' : 'var(--run-line)') : 'none',
+        borderTopLeftRadius: l ? '7px' : 0, borderBottomLeftRadius: l ? '7px' : 0,
+        borderTopRightRadius: r ? '7px' : 0, borderBottomRightRadius: r ? '7px' : 0,
+        boxShadow: active ? 'inset 0 0 0 1px var(--accent-mid)' : 'none'
+      };
+    }
+    return { key: day.key, day: String(day.d), runStyle, numStyle };
+  }
+
+  gridWeeks(fromIdx, toIdx, padMonth) {
+    const cells = [];
+    const first = DAYS[fromIdx];
+    const lead = padMonth ? first.dow : DAYS[fromIdx].dow;
+    for (let k = 0; k < lead; k++) cells.push(null);
+    for (let i = fromIdx; i <= toIdx; i++) cells.push(i);
+    while (cells.length % 7 !== 0) cells.push(null);
+    const weeks = [];
+    for (let w = 0; w < cells.length; w += 7) {
+      const row = cells.slice(w, w + 7).map((i, ci) => {
+        if (i === null) return { key: 'e' + w + ci, day: '', runStyle: { display: 'none' }, numStyle: { fontSize: '12.5px', color: 'transparent' } };
+        const bi = this.blockOf[i] === undefined ? -1 : this.blockOf[i];
+        const prevIdx = cells[w + ci - 1];
+        const nextIdx = cells[w + ci + 1];
+        const prevSame = ci > 0 && prevIdx !== null && prevIdx !== undefined && this.blockOf[prevIdx] === bi;
+        const nextSame = ci < 6 && nextIdx !== null && nextIdx !== undefined && this.blockOf[nextIdx] === bi;
+        const active = bi >= 0 && this.state.hover === bi;
+        return this.cell(i, bi, prevSame, nextSame, active);
+      });
+      weeks.push({ key: 'w' + w, cells: row });
+    }
+    return weeks;
+  }
+
+  async save() {
+    if (!window.htmlToImage) return;
+    this.setState({ saving: true, shareMounted: true });
+    await new Promise(r => requestAnimationFrame(() => setTimeout(r, 80)));
+    const node = this.shareRef.current;
+    if (!node) { this.setState({ saving: false, shareMounted: false }); return; }
+    try {
+      const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+      const url = await window.htmlToImage.toPng(node, { pixelRatio: 2, backgroundColor: bg });
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '2027-연차계획.png';
+      a.click();
+    } catch (e) { console.error(e); }
+    this.setState({ saving: false, shareMounted: false });
+  }
+
+  seg(value, key, opts) {
+    return opts.map(o => ({
+      key: o.v,
+      label: o.l,
+      onClick: () => this.setState({ [key]: o.v, hover: -1 }),
+      style: {
+        flex: 1, height: '28px', padding: '0 6px', cursor: 'pointer',
+        fontSize: '12px', fontWeight: value === o.v ? 700 : 500,
+        color: value === o.v ? 'var(--text)' : 'var(--text-3)',
+        background: value === o.v ? 'var(--surface)' : 'transparent',
+        border: value === o.v ? '1px solid var(--line)' : '1px solid transparent',
+        borderRadius: '6px',
+        boxShadow: value === o.v ? 'var(--shadow)' : 'none'
+      }
+    }));
+  }
+
+  renderVals() {
+    const st = this.state;
+    const blocks = this.plan().map(b => ({ ...b, leaveSet: new Set(b.leaveIdx) }));
+    this.blocks = blocks;
+    this.blockOf = {};
+    blocks.forEach((b, bi) => { for (let i = b.s; i <= b.e; i++) this.blockOf[i] = bi; });
+
+    const fmt = i => (DAYS[i].m + 1) + '.' + DAYS[i].d;
+    const dowKo = ['일','월','화','수','목','금','토'];
+
+    const picks = blocks.map((b, bi) => {
+      const eff = b.total / b.cost;
+      const active = st.hover === bi;
+      let ws = b.s - DAYS[b.s].dow;
+      if (ws < 0) ws = 0;
+      let we = b.e + (6 - DAYS[b.e].dow);
+      if (we > DAYS.length - 1) we = DAYS.length - 1;
+      return {
+        key: 'p' + b.s,
+        total: String(b.total),
+        cost: String(b.cost),
+        monthLabel: MONTHS[DAYS[b.s].m] + (DAYS[b.e].m !== DAYS[b.s].m ? '–' + MONTHS[DAYS[b.e].m] : ''),
+        rangeLabel: fmt(b.s) + '(' + dowKo[DAYS[b.s].dow] + ') – ' + fmt(b.e) + '(' + dowKo[DAYS[b.e].dow] + ')',
+        leaveLabel: '연차 ' + b.leaveIdx.map(i => fmt(i) + '(' + dowKo[DAYS[i].dow] + ')').join(', '),
+        effLabel: '×' + (Math.round(eff * 10) / 10).toFixed(1),
+        badgeStyle: {
+          padding: '2px 7px', fontSize: '10px', fontWeight: 700, borderRadius: '5px',
+          color: 'var(--accent)', background: 'var(--accent-soft)'
+        },
+        cardStyle: {
+          flex: '1 1 250px', minWidth: '230px', display: 'flex', flexDirection: 'column', gap: '9px',
+          padding: '14px', cursor: 'default', background: 'var(--surface)',
+          border: '1px solid ' + (active ? 'var(--accent-mid)' : 'var(--line)'),
+          borderRadius: '12px',
+          boxShadow: active ? '0 2px 10px rgba(0,0,0,0.06)' : 'var(--shadow)',
+          transition: 'border-color .12s, box-shadow .12s'
+        },
+        weeks: this.gridWeeks(ws, we, false),
+        onEnter: () => this.setState({ hover: bi }),
+        onLeave: () => this.setState({ hover: -1 })
+      };
+    });
+
+    const months = MONTHS.map((label, m) => {
+      const from = DAYS.findIndex(d => d.m === m);
+      let to = from;
+      while (to + 1 < DAYS.length && DAYS[to + 1].m === m) to++;
+      const hs = DAYS.slice(from, to + 1).filter(d => d.hol);
+      const mBlocks = blocks.filter(b => DAYS[b.s].m === m || DAYS[b.e].m === m);
+      const best = mBlocks.reduce((a, b) => (a && a.total >= b.total ? a : b), null);
+      return {
+        key: 'm' + m,
+        label,
+        tag: best ? best.total + '일' : hs.length ? '공휴일 ' + hs.length : '',
+        tagStyle: {
+          fontSize: '10px', fontWeight: 700, padding: best ? '2px 6px' : 0, borderRadius: '5px',
+          color: best ? 'var(--accent)' : 'var(--text-4)',
+          background: best ? 'var(--accent-soft)' : 'transparent'
+        },
+        weeks: this.gridWeeks(from, to, true)
+      };
+    });
+
+    const usedLeave = blocks.reduce((s, b) => s + b.cost, 0);
+    const totalRest = blocks.reduce((s, b) => s + b.total, 0);
+
+    return {
+      leave: String(st.leave),
+      onLeave: e => this.setState({ leave: +e.target.value, hover: -1 }),
+      strategyOpts: this.seg(st.strategy, 'strategy', [{ v: 'spread', l: '나눠 쓰기' }, { v: 'burst', l: '몰아 쓰기' }]),
+      strategyHint: st.strategy === 'spread' ? '적은 연차로 효율 높은 구간을 여러 번 만듭니다.' : '연차를 한 구간에 모아 가장 긴 연휴를 만듭니다.',
+      minLenOpts: this.seg(st.minLen, 'minLen', [{ v: 4, l: '4일+' }, { v: 5, l: '5일+' }, { v: 7, l: '7일+' }]),
+      halfOpts: this.seg(st.half, 'half', [{ v: 'all', l: '전체' }, { v: 'h1', l: '상반기' }, { v: 'h2', l: '하반기' }]),
+      picks,
+      months,
+      isEmpty: picks.length === 0,
+      pickSummary: picks.length ? picks.length + '개 구간 · 연차 ' + usedLeave + '일 → ' + totalRest + '일 휴식' : '조건에 맞는 구간 없음',
+      usedLeave: String(usedLeave),
+      totalRest: String(totalRest),
+      dowShort: ['일','월','화','수','목','금','토'],
+      holidayCount: String(Object.keys(HOL).length),
+      holidayList: Object.keys(HOL).map(k => {
+        const p = k.split('-');
+        return { key: k, date: (+p[1]) + '.' + (+p[2]), name: HOL[k] };
+      }),
+      themeLabel: st.dark ? '라이트' : '다크',
+      toggleTheme: () => { const d = !this.state.dark; this.applyTheme(d); this.setState({ dark: d }); },
+      saveLabel: st.saving ? '저장 중' : '이미지 저장',
+      saveImage: () => this.save(),
+      shareRef: this.shareRef,
+      shareMounted: !!st.shareMounted,
+      shareHeadline: '연차 ' + usedLeave + '일 → ' + totalRest + '일 휴식',
+      shareStrategy: st.strategy === 'spread' ? '나눠 쓰기 · 최소 ' + st.minLen + '일' : '몰아 쓰기 · 최소 ' + st.minLen + '일'
+    };
+  }
+}
+</script>
+</body>
+</html>

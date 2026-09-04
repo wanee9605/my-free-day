@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#F1F1EF; --surface:#FCFCFB; --field:#FFFFFF; --line:#D9D9D4; --line-soft:#E6E6E1;
+  --text:#1E1F1E; --text-2:#484A48; --text-3:#75776F; --text-4:#A0A29A;
+  --acc:#1F6F5C; --acc-ink:#14503F; --acc-soft:rgba(31,111,92,0.14); --acc-mid:rgba(31,111,92,0.38);
+  --run:#E4E4DE; --run-line:#C9C9C1; --hint:rgba(31,111,92,0.07);
+  --sun:#C0392B; --sat:#2B57A8;
+}
+:root[data-theme="dark"]{
+  --bg:#101211; --surface:#171A18; --field:#1D211F; --line:#2B302D; --line-soft:#232725;
+  --text:#EDEEEB; --text-2:#B2B5B0; --text-3:#82867F; --text-4:#5C605A;
+  --acc:#5BB79C; --acc-ink:#8ED6BE; --acc-soft:rgba(91,183,156,0.18); --acc-mid:rgba(91,183,156,0.45);
+  --run:#242A27; --run-line:#333A36; --hint:rgba(91,183,156,0.09);
+  --sun:#EF8175; --sat:#86A9E8;
+}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;text-wrap:pretty}
+*{box-sizing:border-box}
+a{color:var(--acc);text-decoration:none}
+a:hover{color:var(--acc-ink)}
+button{font-family:inherit;font-variant-numeric:tabular-nums;cursor:pointer}
+input[type="range"]{accent-color:var(--acc);width:100%;height:20px;margin:0;padding:0;background:transparent;border:none}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--bg)">
+
+  <header style="position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;height:46px;padding:0 14px;background:var(--bg);border-bottom:1px solid var(--line)">
+    <div style="display:flex;align-items:baseline;gap:7px;min-width:0">
+      <span style="font-size:13px;font-weight:600;letter-spacing:-0.01em">2027 연차 직접 배치</span>
+      <span style="font-size:12px;font-weight:500;color:var(--text-3)">{{ headerStat }}</span>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button onClick="{{ clearAll }}" style="height:28px;padding:0 10px;font-size:12px;font-weight:500;color:var(--text-2);background:var(--surface);border:1px solid var(--line);border-radius:5px">비우기</button>
+      <button onClick="{{ autofill }}" style="height:28px;padding:0 10px;font-size:12px;font-weight:600;color:var(--bg);background:var(--text);border:1px solid var(--text);border-radius:5px">추천으로 채우기</button>
+      <button onClick="{{ toggleTheme }}" style="height:28px;padding:0 10px;font-size:12px;font-weight:500;color:var(--text-2);background:var(--surface);border:1px solid var(--line);border-radius:5px">{{ themeLabel }}</button>
+    </div>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;max-width:1280px;margin:0 auto;padding:14px">
+
+    <section style="flex:1 1 300px;position:sticky;top:60px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden">
+
+      <div style="display:flex;flex-direction:column;gap:10px;padding:13px 14px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <span style="font-size:12px;font-weight:600;color:var(--text-2)">연차 한도</span>
+          <span style="display:flex;align-items:baseline;gap:2px"><span style="font-size:22px;font-weight:600;line-height:1;letter-spacing:-0.02em">{{ budget }}</span><span style="font-size:12px;font-weight:500;color:var(--text-3)">일</span></span>
+        </div>
+        <input type="range" min="1" max="25" step="1" value="{{ budget }}" onChange="{{ onBudget }}" onInput="{{ onBudget }}">
+        <div style="display:flex;flex-direction:column;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:6px;overflow:hidden">
+          <sc-for list="{{ stats }}" as="s" hint-placeholder-count="3">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:9px 11px;background:var(--surface)">
+              <span style="font-size:12px;font-weight:500;color:var(--text-3)">{{ s.k }}</span>
+              <span style="{{ s.vStyle }}">{{ s.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <span style="font-size:11.5px;font-weight:500;line-height:1.5;color:var(--text-4)">달력의 평일을 눌러 연차를 직접 놓거나 뺄 수 있습니다.</span>
+      </div>
+
+      <div style="height:1px;background:var(--line-soft)"></div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;padding:13px 14px">
+        <span style="font-size:12px;font-weight:600;color:var(--text-2)">지금 한 칸 더 쓰면</span>
+        <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="3">
+          <button onClick="{{ s.onClick }}" onMouseEnter="{{ s.onEnter }}" onMouseLeave="{{ s.onLeave }}" style="{{ s.style }}">
+            <span style="display:flex;flex-direction:column;gap:2px;align-items:flex-start">
+              <span style="font-size:12.5px;font-weight:600;color:var(--text)">{{ s.date }}</span>
+              <span style="font-size:11px;font-weight:500;color:var(--text-3)">{{ s.detail }}</span>
+            </span>
+            <span style="font-size:13px;font-weight:600;color:var(--acc)">{{ s.gain }}</span>
+          </button>
+        </sc-for>
+        <sc-if value="{{ noSuggest }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:11.5px;font-weight:500;color:var(--text-3)">{{ noSuggestText }}</span>
+        </sc-if>
+      </div>
+
+      <div style="height:1px;background:var(--line-soft)"></div>
+
+      <div style="display:flex;flex-direction:column;gap:7px;padding:13px 14px">
+        <span style="font-size:12px;font-weight:600;color:var(--text-2)">만들어진 연휴</span>
+        <sc-for list="{{ runs }}" as="r" hint-placeholder-count="3">
+          <div onMouseEnter="{{ r.onEnter }}" onMouseLeave="{{ r.onLeave }}" style="{{ r.style }}">
+            <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <span style="font-size:12.5px;font-weight:600;color:var(--text)">{{ r.range }}</span>
+              <span style="font-size:11px;font-weight:500;color:var(--text-3)">연차 {{ r.cost }}일 · ×{{ r.eff }}</span>
+            </span>
+            <span style="display:flex;align-items:baseline;gap:2px;flex:none"><span style="font-size:19px;font-weight:600;line-height:1;letter-spacing:-0.02em">{{ r.total }}</span><span style="font-size:11px;font-weight:500;color:var(--text-3)">일</span></span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noRuns }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:11.5px;font-weight:500;color:var(--text-3)">아직 배치한 연차가 없습니다.</span>
+        </sc-if>
+      </div>
+
+    </section>
+
+    <section style="flex:3 1 600px;display:flex;flex-direction:column;gap:10px;min-width:0">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;padding:9px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px">
+        <span style="font-size:12px;font-weight:500;color:var(--text-2)">평일을 누르면 연차가 놓이고, 다시 누르면 빠집니다.</span>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--text-3)"><span style="font-weight:700;color:var(--sun)">일</span>공휴일·일요일</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--text-3)"><span style="font-weight:700;color:var(--sat)">토</span>토요일</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--text-3)"><span style="display:flex;align-items:center;justify-content:center;width:17px;height:15px;border-radius:3px;font-size:10px;font-weight:700;color:var(--acc-ink);background:var(--acc-soft);border:1px solid var(--acc-mid)">3</span>내 연차</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+          <div style="flex:1 1 210px;min-width:196px;display:flex;flex-direction:column;gap:6px;padding:11px 11px 9px;background:var(--surface);border:1px solid var(--line);border-radius:8px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between">
+              <span style="font-size:12.5px;font-weight:600;letter-spacing:-0.01em">{{ m.label }}</span>
+              <span style="{{ m.tagStyle }}">{{ m.tag }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);padding-bottom:2px;border-bottom:1px solid var(--line-soft)">
+              <sc-for list="{{ dowHead }}" as="w" hint-placeholder-count="7">
+                <span style="{{ w.style }}">{{ w.label }}</span>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ m.weeks }}" as="wk" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+                  <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+                    <div onClick="{{ c.onClick }}" onMouseEnter="{{ c.onEnter }}" onMouseLeave="{{ c.onLeave }}" title="{{ c.title }}" style="{{ c.wrapStyle }}" style-hover="box-shadow:inset 0 0 0 1px var(--acc-mid);border-radius:6px">
+                      <div style="{{ c.runStyle }}"></div>
+                      <span style="{{ c.numStyle }}">{{ c.day }}</span>
+                      <span style="{{ c.capStyle }}">{{ c.caption }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="padding-bottom:24px"></div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { budget: 5, sel: {}, hoverRun: -1, hoverDay: -1, dark: false, core: null };
+  componentDidMount() {
+    this.applyTheme(false);
+    import('./core.js').then(m => {
+      const r = m.plan({ leave: this.state.budget, strategy: 'spread', minLen: 4 });
+      const sel = {};
+      r.blocks.forEach(b => b.leaveIdx.forEach(i => { sel[i] = true; }));
+      this.setState({ core: m, sel });
+    });
+  }
+  applyTheme(dark) { document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light'); }
+
+  /* runs of consecutive off-days given the current selection */
+  computeRuns(days, sel) {
+    const isOff = i => days[i].off || !!sel[i];
+    const runs = [];
+    let i = 0;
+    while (i < days.length) {
+      if (!isOff(i)) { i++; continue; }
+      let j = i;
+      while (j + 1 < days.length && isOff(j + 1)) j++;
+      const leaveIdx = [];
+      for (let k = i; k <= j; k++) if (sel[k] && !days[k].off) leaveIdx.push(k);
+      runs.push({ s: i, e: j, total: j - i + 1, leaveIdx, cost: leaveIdx.length });
+      i = j + 1;
+    }
+    return runs;
+  }
+
+  restOf(runs) { return runs.filter(r => r.cost > 0).reduce((s, r) => s + r.total, 0); }
+
+  renderVals() {
+    const st = this.state, C = st.core;
+    const base = {
+      budget: String(st.budget),
+      dowHead: ['일', '월', '화', '수', '목', '금', '토'].map((l, k) => ({
+        key: 'd' + k, label: l,
+        style: {
+          textAlign: 'center', fontSize: '10.5px', fontWeight: 600,
+          color: k === 0 ? 'var(--sun)' : k === 6 ? 'var(--sat)' : 'var(--text-3)'
+        }
+      })),
+      themeLabel: st.dark ? '라이트' : '다크',
+      toggleTheme: () => { const d = !this.state.dark; this.applyTheme(d); this.setState({ dark: d }); },
+      onBudget: e => this.setState({ budget: +e.target.value })
+    };
+    if (!C) return { ...base, headerStat: '', stats: [], suggestions: [], runs: [], months: [], noRuns: false, noSuggest: false, noSuggestText: '', clearAll: () => {}, autofill: () => {} };
+
+    const days = C.DAYS, sel = st.sel;
+    const usedCount = Object.keys(sel).filter(k => sel[k]).length;
+    const runs = this.computeRuns(days, sel);
+    const rest = this.restOf(runs);
+    const runOf = {};
+    runs.forEach((r, ri) => { if (r.cost > 0) for (let i = r.s; i <= r.e; i++) runOf[i] = ri; });
+    const fmt = i => (days[i].m + 1) + '.' + days[i].d;
+    const fmtD = i => fmt(i) + '(' + C.dowKo[days[i].dow] + ')';
+
+    const toggle = i => {
+      const next = { ...this.state.sel };
+      if (next[i]) delete next[i];
+      else {
+        if (Object.keys(next).length >= this.state.budget) return;
+        next[i] = true;
+      }
+      this.setState({ sel: next, hoverRun: -1 });
+    };
+
+    /* marginal gain of adding one more leave day */
+    const sug = [];
+    if (usedCount < st.budget) {
+      for (let i = 0; i < days.length; i++) {
+        if (days[i].off || sel[i]) continue;
+        const trial = { ...sel, [i]: true };
+        const g = this.restOf(this.computeRuns(days, trial)) - rest;
+        if (g > 0) sug.push({ i, g });
+      }
+      sug.sort((a, b) => b.g - a.g || a.i - b.i);
+    }
+    const suggestions = sug.slice(0, 3).map(s => {
+      const active = st.hoverDay === s.i;
+      return {
+        key: 's' + s.i,
+        date: fmtD(s.i) + ' 추가',
+        detail: '이 날을 쓰면 앞뒤 휴일과 이어집니다',
+        gain: '+' + s.g + '일',
+        onClick: () => toggle(s.i),
+        onEnter: () => this.setState({ hoverDay: s.i }),
+        onLeave: () => this.setState({ hoverDay: -1 }),
+        style: {
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+          padding: '9px 11px', textAlign: 'left',
+          background: active ? 'var(--acc-soft)' : 'var(--bg)',
+          border: '1px solid ' + (active ? 'var(--acc-mid)' : 'var(--line-soft)'), borderRadius: '6px'
+        }
+      };
+    });
+
+    const cell = (i, ri, prevSame, nextSame) => {
+      const D = days[i];
+      const isLeave = !!sel[i] && !D.off;
+      const inRun = ri !== undefined && ri >= 0;
+      const active = inRun && st.hoverRun === ri;
+      const isSug = st.hoverDay === i;
+      const edge = active || isSug ? 'var(--acc-mid)' : 'var(--run-line)';
+      let runStyle = { display: 'none' };
+      if (inRun) {
+        const l = !prevSame, r = !nextSame;
+        runStyle = {
+          position: 'absolute', top: '1px', bottom: '1px', left: 0, right: 0,
+          background: isLeave ? 'var(--acc-soft)' : 'var(--run)',
+          borderTop: '1px solid ' + edge, borderBottom: '1px solid ' + edge,
+          borderLeft: l ? '1px solid ' + edge : 'none', borderRight: r ? '1px solid ' + edge : 'none',
+          borderTopLeftRadius: l ? '6px' : 0, borderBottomLeftRadius: l ? '6px' : 0,
+          borderTopRightRadius: r ? '6px' : 0, borderBottomRightRadius: r ? '6px' : 0,
+          boxShadow: active ? 'inset 0 0 0 1px var(--acc-mid)' : 'none'
+        };
+      } else if (isSug) {
+        runStyle = { position: 'absolute', top: '1px', bottom: '1px', left: 0, right: 0, background: 'var(--hint)', border: '1px dashed var(--acc-mid)', borderRadius: '6px' };
+      }
+      const dayColor = D.hol || D.dow === 0 ? 'var(--sun)' : D.dow === 6 ? 'var(--sat)' : isLeave ? 'var(--acc-ink)' : 'var(--text)';
+      const caption = D.hol ? D.hol.replace(' 연휴', '') : isLeave ? '연차' : '';
+      return {
+        key: D.key, day: String(D.d),
+        caption,
+        capStyle: {
+          position: 'relative', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          fontSize: '9px', lineHeight: 1.1, fontWeight: 600,
+          color: D.hol ? 'var(--sun)' : 'var(--acc-ink)'
+        },
+        title: (D.m + 1) + '월 ' + D.d + '일' + (D.hol ? ' · ' + D.hol : isLeave ? ' · 연차' : ''),
+        onClick: D.off ? null : () => toggle(i),
+        onEnter: inRun ? () => this.setState({ hoverRun: ri }) : null,
+        onLeave: inRun ? () => this.setState({ hoverRun: -1 }) : null,
+        wrapStyle: {
+          position: 'relative', height: '38px', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: '1px',
+          cursor: D.off ? 'default' : 'pointer'
+        },
+        runStyle,
+        numStyle: {
+          position: 'relative', fontSize: '12.5px', lineHeight: 1,
+          fontWeight: D.hol || isLeave ? 700 : 500, color: dayColor
+        }
+      };
+    };
+
+    const months = C.MONTHS.map((label, m) => {
+      const from = days.findIndex(d => d.m === m);
+      let to = from; while (to + 1 < days.length && days[to + 1].m === m) to++;
+      const cells = [];
+      for (let k = 0; k < days[from].dow; k++) cells.push(null);
+      for (let i = from; i <= to; i++) cells.push(i);
+      while (cells.length % 7) cells.push(null);
+      const weeks = [];
+      for (let w = 0; w < cells.length; w += 7) {
+        weeks.push({
+          key: 'w' + m + w,
+          cells: cells.slice(w, w + 7).map((i, ci) => {
+            if (i === null) return { key: 'e' + m + w + ci, day: '', caption: '', title: '', wrapStyle: { height: '38px' }, runStyle: { display: 'none' }, numStyle: { fontSize: '12.5px', color: 'transparent' }, capStyle: { fontSize: '9px' } };
+            const ri = runOf[i] === undefined ? -1 : runOf[i];
+            const p = cells[w + ci - 1], n = cells[w + ci + 1];
+            return cell(i, ri, ci > 0 && p != null && runOf[p] === ri, ci < 6 && n != null && runOf[n] === ri);
+          })
+        });
+      }
+      const mine = runs.filter(r => r.cost > 0 && (days[r.s].m === m || days[r.e].m === m));
+      const best = mine.reduce((a, b) => (a && a.total >= b.total ? a : b), null);
+      return {
+        key: 'M' + m, label,
+        tag: best ? best.total + '일' : '',
+        tagStyle: { fontSize: '11px', fontWeight: 600, padding: best ? '1px 6px' : 0, borderRadius: '4px', color: best ? 'var(--acc-ink)' : 'transparent', background: best ? 'var(--acc-soft)' : 'transparent' },
+        weeks
+      };
+    });
+
+    const runRows = runs.map((r, ri) => ({ r, ri })).filter(x => x.r.cost > 0).map(({ r, ri }) => {
+      const active = st.hoverRun === ri;
+      return {
+        key: 'r' + r.s,
+        range: fmtD(r.s) + ' – ' + fmtD(r.e),
+        total: String(r.total), cost: String(r.cost),
+        eff: (Math.round(r.total / r.cost * 10) / 10).toFixed(1),
+        onEnter: () => this.setState({ hoverRun: ri }),
+        onLeave: () => this.setState({ hoverRun: -1 }),
+        style: {
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+          padding: '9px 11px', background: active ? 'var(--acc-soft)' : 'var(--bg)',
+          border: '1px solid ' + (active ? 'var(--acc-mid)' : 'var(--line-soft)'), borderRadius: '6px'
+        }
+      };
+    });
+
+    return {
+      ...base,
+      headerStat: '연차 ' + usedCount + '/' + st.budget + ' · 휴식 ' + rest + '일',
+      stats: [
+        { key: 'a', k: '배치한 연차', v: usedCount + ' / ' + st.budget + '일', vStyle: { fontSize: '13px', fontWeight: 600, color: 'var(--text)' } },
+        { key: 'b', k: '총 휴식', v: rest + '일', vStyle: { fontSize: '13px', fontWeight: 600, color: 'var(--acc)' } },
+        { key: 'c', k: '연차 1일당', v: (usedCount ? (Math.round(rest / usedCount * 10) / 10).toFixed(1) : '0.0') + '일', vStyle: { fontSize: '13px', fontWeight: 600, color: 'var(--text)' } }
+      ],
+      suggestions,
+      noSuggest: suggestions.length === 0,
+      noSuggestText: usedCount >= st.budget ? '한도를 모두 썼습니다. 한도를 늘리거나 배치를 바꿔보세요.' : '더 이어붙일 수 있는 날이 없습니다.',
+      runs: runRows,
+      noRuns: runRows.length === 0,
+      months,
+      clearAll: () => this.setState({ sel: {}, hoverRun: -1 }),
+      autofill: () => {
+        const r = C.plan({ leave: this.state.budget, strategy: 'spread', minLen: 4 });
+        const s = {};
+        r.blocks.forEach(b => b.leaveIdx.forEach(i => { s[i] = true; }));
+        this.setState({ sel: s, hoverRun: -1 });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
