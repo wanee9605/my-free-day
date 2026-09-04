@@ -1,127 +1,117 @@
 {
-  "year": 2027,
+  "year": 2026,
   "updatedAt": "2026-09-04",
   "source": "공공데이터포털 한국천문연구원_특일 정보 (getRestDeInfo)",
   "holidays": [
     {
-      "date": "2027-01-01",
+      "date": "2026-01-01",
       "name": "신정",
       "type": "public"
     },
     {
-      "date": "2027-02-06",
+      "date": "2026-02-16",
       "name": "설날",
       "type": "public"
     },
     {
-      "date": "2027-02-07",
+      "date": "2026-02-17",
       "name": "설날",
       "type": "public"
     },
     {
-      "date": "2027-02-08",
+      "date": "2026-02-18",
       "name": "설날",
       "type": "public"
     },
     {
-      "date": "2027-02-09",
-      "name": "대체공휴일(설날)",
-      "type": "substitute"
-    },
-    {
-      "date": "2027-03-01",
+      "date": "2026-03-01",
       "name": "삼일절",
       "type": "public"
     },
     {
-      "date": "2027-05-01",
+      "date": "2026-03-02",
+      "name": "대체공휴일(삼일절)",
+      "type": "substitute"
+    },
+    {
+      "date": "2026-05-01",
       "name": "노동절",
       "type": "public"
     },
     {
-      "date": "2027-05-03",
-      "name": "대체공휴일(노동절)",
-      "type": "substitute"
-    },
-    {
-      "date": "2027-05-05",
+      "date": "2026-05-05",
       "name": "어린이날",
       "type": "public"
     },
     {
-      "date": "2027-05-13",
+      "date": "2026-05-24",
       "name": "부처님오신날",
       "type": "public"
     },
     {
-      "date": "2027-06-06",
+      "date": "2026-05-25",
+      "name": "대체공휴일(부처님오신날)",
+      "type": "substitute"
+    },
+    {
+      "date": "2026-06-03",
+      "name": "전국동시지방선거",
+      "type": "temporary"
+    },
+    {
+      "date": "2026-06-06",
       "name": "현충일",
       "type": "public"
     },
     {
-      "date": "2027-07-17",
+      "date": "2026-07-17",
       "name": "제헌절",
       "type": "public"
     },
     {
-      "date": "2027-07-19",
-      "name": "대체공휴일(제헌절)",
-      "type": "substitute"
-    },
-    {
-      "date": "2027-08-15",
+      "date": "2026-08-15",
       "name": "광복절",
       "type": "public"
     },
     {
-      "date": "2027-08-16",
+      "date": "2026-08-17",
       "name": "대체공휴일(광복절)",
       "type": "substitute"
     },
     {
-      "date": "2027-09-14",
+      "date": "2026-09-24",
       "name": "추석",
       "type": "public"
     },
     {
-      "date": "2027-09-15",
+      "date": "2026-09-25",
       "name": "추석",
       "type": "public"
     },
     {
-      "date": "2027-09-16",
+      "date": "2026-09-26",
       "name": "추석",
       "type": "public"
     },
     {
-      "date": "2027-10-03",
+      "date": "2026-10-03",
       "name": "개천절",
       "type": "public"
     },
     {
-      "date": "2027-10-04",
+      "date": "2026-10-05",
       "name": "대체공휴일(개천절)",
       "type": "substitute"
     },
     {
-      "date": "2027-10-09",
+      "date": "2026-10-09",
       "name": "한글날",
       "type": "public"
     },
     {
-      "date": "2027-10-11",
-      "name": "대체공휴일(한글날)",
-      "type": "substitute"
-    },
-    {
-      "date": "2027-12-25",
+      "date": "2026-12-25",
       "name": "성탄절",
       "type": "public"
-    },
-    {
-      "date": "2027-12-27",
-      "name": "대체공휴일(성탄절)",
-      "type": "substitute"
     }
   ]
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import LeavePlanner from '@/components/LeavePlanner';
+import { currentYearToday } from '@/lib/calendar';
 import { DEFAULT_YEAR } from '@/lib/holidays';
 import { optimize } from '@/lib/optimize';
 import { parsePlannerState, plannerQueryString } from '@/lib/urlState';
@@ -38,6 +39,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     annualLeaveCount: state.leave,
     blackoutRanges: state.blackout,
     workSaturday: false,
+    notBefore: currentYearToday(DEFAULT_YEAR),
     mode: state.mode,
     fixedAllocations: state.fixed,
   });

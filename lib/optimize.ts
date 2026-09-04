@@ -115,18 +115,19 @@ export function allocateLongestFirst(clusters: Cluster[], leave: number): number
 }
 
 /** 대상 연도의 DayInfo 배열 (패딩 포함) */
-export function buildYearDays(input: Pick<OptimizeInput, 'year' | 'blackoutRanges'>): DayInfo[] {
+export function buildYearDays(input: Pick<OptimizeInput, 'year' | 'blackoutRanges' | 'notBefore'>): DayInfo[] {
   const data = getHolidayData(input.year);
   if (!data) throw new Error(`지원하지 않는 연도입니다: ${input.year}`);
   return buildDays({
     year: input.year,
     holidays: data.holidays,
     blackoutRanges: normalizeRanges(input.blackoutRanges),
+    notBefore: input.notBefore,
   });
 }
 
 /** 대상 연도의 클러스터(곡선 포함) 목록 */
-export function buildClusters(input: Pick<OptimizeInput, 'year' | 'blackoutRanges'>): Cluster[] {
+export function buildClusters(input: Pick<OptimizeInput, 'year' | 'blackoutRanges' | 'notBefore'>): Cluster[] {
   return findClusters(buildYearDays(input)).map(withCurve);
 }
 

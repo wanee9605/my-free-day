@@ -98,6 +98,8 @@ export interface OptimizeInput {
   mode: OptimizeMode;
   /** 사용자가 직접 지정한 클러스터별 연차 배정 (clusterId → 슬롯 k). 나머지는 자동 */
   fixedAllocations?: Record<number, number>;
+  /** 이 날짜보다 이전인 평일은 연차 대상에서 제외. 진행 중인 연도에서만 쓴다 */
+  notBefore?: string;
 }
 
 export interface OptimizeResult {

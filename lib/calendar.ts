@@ -67,10 +67,23 @@ const FIXED_HOLIDAYS_OUTSIDE_YEAR: Record<string, string> = {
   '12-25': '성탄절',
 };
 
+/** 오늘 날짜(한국 기준). 서버·브라우저 어디서 불러도 같은 값이 나오도록 시간대를 고정한다. */
+export function todayInSeoul(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+}
+
+/** 대상 연도가 진행 중이면 오늘 날짜를, 아니면 undefined 를 준다 (buildDays 의 notBefore 용) */
+export function currentYearToday(year: number): string | undefined {
+  const today = todayInSeoul();
+  return today.startsWith(`${year}-`) ? today : undefined;
+}
+
 export interface BuildDaysOptions {
   year: number;
   holidays: Holiday[];
   blackoutRanges?: DateRange[];
+  /** 이 날짜보다 이전인 평일은 연차 대상에서 제외 (진행 중인 연도에서 지난 날짜를 추천하지 않기 위함) */
+  notBefore?: string;
   padding?: number;
 }
 
@@ -79,6 +92,7 @@ export function buildDays({
   year,
   holidays,
   blackoutRanges = [],
+  notBefore,
   padding = PADDING_DAYS,
 }: BuildDaysOptions): DayInfo[] {
   const holidayMap = new Map(holidays.map((h) => [h.date, h]));
@@ -111,7 +125,8 @@ export function buildDays({
 
     const isOff = isWeekend || holidayName !== undefined;
     const inBlackout = blackoutRanges.some((r) => r.start <= date && date <= r.end);
-    const selectable = inYear && !isOff && !inBlackout;
+    const isPast = notBefore !== undefined && date < notBefore;
+    const selectable = inYear && !isOff && !inBlackout && !isPast;
 
     days.push({ date, weekday, isOff, isWeekend, holidayName, holidayType, selectable, inYear });
   }

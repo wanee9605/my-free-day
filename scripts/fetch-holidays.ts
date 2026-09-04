@@ -33,6 +33,18 @@ function parseYearArg(): number {
   return year;
 }
 
+// API 표기 중 화면에 그대로 쓰기 어색한 이름만 보정한다.
+// JSON 을 손으로 고치면 재생성할 때 되돌아가므로 보정은 여기에 둔다.
+const DISPLAY_NAME: Record<string, string> = {
+  '1월1일': '신정',
+  기독탄신일: '성탄절',
+  '대체공휴일(기독탄신일)': '대체공휴일(성탄절)',
+};
+
+function displayName(name: string): string {
+  return DISPLAY_NAME[name] ?? name;
+}
+
 function classify(name: string): HolidayType {
   if (name.includes('대체')) return 'substitute';
   if (name.includes('선거') || name.includes('임시')) return 'temporary';
@@ -79,7 +91,7 @@ async function main(): Promise<void> {
       if (it.isHoliday !== 'Y') continue;
       const date = toISO(it.locdate);
       const name = it.dateName.trim();
-      merged.set(date, { date, name, type: classify(name) });
+      merged.set(date, { date, name: displayName(name), type: classify(name) });
     }
     process.stdout.write(`  ${year}-${String(month).padStart(2, '0')}: ${items.length}건\n`);
   }

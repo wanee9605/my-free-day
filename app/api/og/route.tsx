@@ -1,6 +1,7 @@
 // 공유 이미지 생성 — 1080×1350, 쿼리 파라미터로 입력 상태를 전달받아 동일 결과를 재계산
 import { ImageResponse } from 'next/og';
 import { fmtRangeShort, fmtSelectedDays } from '@/lib/format';
+import { currentYearToday } from '@/lib/calendar';
 import { DEFAULT_YEAR, isSupportedYear } from '@/lib/holidays';
 import { optimize } from '@/lib/optimize';
 import { parsePlannerState } from '@/lib/urlState';
@@ -49,6 +50,7 @@ export async function GET(req: Request): Promise<Response> {
     annualLeaveCount: state.leave,
     blackoutRanges: state.blackout,
     workSaturday: false,
+    notBefore: currentYearToday(year),
     mode: state.mode,
     fixedAllocations: state.fixed,
   });

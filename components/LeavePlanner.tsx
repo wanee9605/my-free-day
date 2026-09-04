@@ -8,6 +8,7 @@ import ResultCards from './ResultCards';
 import ShareButton from './ShareButton';
 import SummaryBar from './SummaryBar';
 import YearCalendar from './YearCalendar';
+import { currentYearToday } from '@/lib/calendar';
 import { buildYearDays, optimize } from '@/lib/optimize';
 import { DEFAULT_STATE, parsePlannerState, plannerQueryString, type PlannerState } from '@/lib/urlState';
 
@@ -45,6 +46,9 @@ export default function LeavePlanner({ year }: Props) {
   const [state, setState] = useState<PlannerState>(DEFAULT_STATE);
   const [applied, setApplied] = useState<PlannerState>(DEFAULT_STATE);
   const [restored, setRestored] = useState(false);
+  // 진행 중인 연도라면 이미 지난 날짜는 연차 후보에서 뺀다.
+  // 서버 렌더에서는 undefined 로 둬 정적 HTML 에 연도 전체가 담기게 하고(SEO), 마운트 후 좁힌다.
+  const [notBefore, setNotBefore] = useState<string | undefined>(undefined);
   const [focus, setFocus] = useState<CalendarFocus | null>(null);
   // 요약 카드가 화면에서 사라졌을 때만 모바일 하단 바를 띄운다 (같은 정보 중복 노출 방지)
   const summaryRef = useRef<HTMLElement | null>(null);
@@ -56,6 +60,10 @@ export default function LeavePlanner({ year }: Props) {
     setApplied(fromUrl);
     setRestored(true);
   }, []);
+
+  useEffect(() => {
+    setNotBefore(currentYearToday(year));
+  }, [year]);
 
   useEffect(() => {
     const el = summaryRef.current;
@@ -95,11 +103,15 @@ export default function LeavePlanner({ year }: Props) {
         workSaturday: false,
         mode: applied.mode,
         fixedAllocations: applied.fixed,
+        notBefore,
       }),
-    [year, applied],
+    [year, applied, notBefore],
   );
 
-  const allDays = useMemo(() => buildYearDays({ year, blackoutRanges: applied.blackout }), [year, applied.blackout]);
+  const allDays = useMemo(
+    () => buildYearDays({ year, blackoutRanges: applied.blackout, notBefore }),
+    [year, applied.blackout, notBefore],
+  );
   const yearDays = useMemo(() => allDays.filter((d) => d.inYear), [allDays]);
   const dayMap = useMemo(() => new Map(allDays.map((d) => [d.date, d])), [allDays]);
 
@@ -139,7 +151,14 @@ export default function LeavePlanner({ year }: Props) {
       <main className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-28 sm:px-8 lg:pb-20">
         {/* 히어로에 겹쳐 올라오는 입력 패널 */}
         <div className="-mt-20 sm:-mt-24">
-          <InputPanel year={year} state={state} onChange={setState} onCommit={commit} onYearChange={handleYearChange} />
+          <InputPanel
+            year={year}
+            state={state}
+            onChange={setState}
+            onCommit={commit}
+            onYearChange={handleYearChange}
+            notBefore={notBefore}
+          />
         </div>
 
         <div className="mt-8">

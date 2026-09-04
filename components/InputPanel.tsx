@@ -12,6 +12,8 @@ interface Props {
   onChange: (next: PlannerState) => void; // 디바운스 적용 (타이핑)
   onCommit: (next: PlannerState) => void; // 즉시 반영 (버튼·토글)
   onYearChange: (year: number) => void;
+  /** 진행 중인 연도에서 지난 날짜를 제외하고 있을 때의 기준일 */
+  notBefore?: string;
 }
 
 const MODES: { value: OptimizeMode; label: string; hint: string }[] = [
@@ -32,7 +34,7 @@ function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.R
   );
 }
 
-export default function InputPanel({ year, state, onChange, onCommit, onYearChange }: Props) {
+export default function InputPanel({ year, state, onChange, onCommit, onYearChange, notBefore }: Props) {
   const setLeaveTyped = (n: number) => onChange({ ...state, leave: clampLeave(n) });
   const setLeave = (n: number) => onCommit({ ...state, leave: clampLeave(n) });
   const setMode = (mode: OptimizeMode) => onCommit({ ...state, mode });
@@ -160,6 +162,11 @@ export default function InputPanel({ year, state, onChange, onCommit, onYearChan
                 </option>
               ))}
             </select>
+            {notBefore && (
+              <p className="text-xs leading-relaxed text-ink-mute">
+                진행 중인 연도라 {Number(notBefore.slice(5, 7))}월 {Number(notBefore.slice(8, 10))}일 이전 날짜는 추천에서 제외했습니다.
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-3">
