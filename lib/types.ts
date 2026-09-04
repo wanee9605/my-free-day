@@ -24,7 +24,8 @@ export interface DayInfo {
   date: string;
   weekday: number; // 0=일 ... 6=토
   isOff: boolean; // 주말 또는 공휴일
-  isWeekend: boolean;
+  /** 근무 형태상 쉬는 날 (주 5일이면 주말, 교대근무면 휴무일) */
+  isOffDuty: boolean;
   holidayName?: string;
   holidayType?: HolidayType;
   selectable: boolean; // 연차 사용 가능 여부 (블랙아웃·연도 밖이면 false)
@@ -90,12 +91,26 @@ export interface BaseHoliday {
 
 export type OptimizeMode = 'totalGain' | 'longestStreak';
 
+/**
+ * 근무 형태. 어떤 날이 "쉬는 날"인지를 정하며, 공휴일은 어느 형태에서도 휴일로 본다.
+ * - week5: 월~금 근무 (토·일 휴무)
+ * - week6: 월~토 근무 (일요일만 휴무)
+ * - shift: 근무 workDays일 → 휴무 offDays일 을 반복. anchor 는 한 주기의 첫 근무일
+ */
+export type WorkPattern =
+  | { kind: 'week5' }
+  | { kind: 'week6' }
+  | { kind: 'shift'; workDays: number; offDays: number; anchor: string };
+
+export const DEFAULT_WORK_PATTERN: WorkPattern = { kind: 'week5' };
+
 export interface OptimizeInput {
   year: number;
   annualLeaveCount: number;
   blackoutRanges: DateRange[];
-  workSaturday: boolean; // v1은 false 고정
   mode: OptimizeMode;
+  /** 근무 형태. 생략하면 주 5일 */
+  workPattern?: WorkPattern;
   /** 사용자가 직접 지정한 클러스터별 연차 배정 (clusterId → 슬롯 k). 나머지는 자동 */
   fixedAllocations?: Record<number, number>;
   /** 이 날짜보다 이전인 평일은 연차 대상에서 제외. 진행 중인 연도에서만 쓴다 */

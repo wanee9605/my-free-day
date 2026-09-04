@@ -14,7 +14,6 @@ function run(overrides: Partial<OptimizeInput>): ReturnType<typeof optimize> {
     year: YEAR,
     annualLeaveCount: 0,
     blackoutRanges: [],
-    workSaturday: false,
     mode: 'longestStreak',
     ...overrides,
   });
@@ -255,7 +254,6 @@ describe('지원 연도 데이터 (2026~2028)', () => {
       year: 2028,
       annualLeaveCount: 1,
       blackoutRanges: [],
-      workSaturday: false,
       mode: 'longestStreak',
     });
     expect(r.longestStreak).toBe(10);
@@ -268,7 +266,6 @@ describe('지원 연도 데이터 (2026~2028)', () => {
       year: 2026,
       annualLeaveCount: 0,
       blackoutRanges: [],
-      workSaturday: false,
       mode: 'longestStreak',
     });
     expect(base.longestStreak).toBe(5);
@@ -278,7 +275,6 @@ describe('지원 연도 데이터 (2026~2028)', () => {
       year: 2026,
       annualLeaveCount: 2,
       blackoutRanges: [],
-      workSaturday: false,
       mode: 'longestStreak',
     });
     expect(r.longestStreak).toBe(9);
@@ -292,7 +288,6 @@ describe('notBefore — 진행 중인 연도의 지난 날짜 제외', () => {
       year: 2026,
       annualLeaveCount: 3,
       blackoutRanges: [],
-      workSaturday: false,
       mode: 'longestStreak',
       notBefore,
     });
@@ -307,12 +302,11 @@ describe('notBefore — 진행 중인 연도의 지난 날짜 제외', () => {
   });
 
   it('기준일이 지난 연도에는 영향이 없다', () => {
-    const base = optimize({ year: 2027, annualLeaveCount: 3, blackoutRanges: [], workSaturday: false, mode: 'longestStreak' });
+    const base = optimize({ year: 2027, annualLeaveCount: 3, blackoutRanges: [], mode: 'longestStreak' });
     const withPast = optimize({
       year: 2027,
       annualLeaveCount: 3,
       blackoutRanges: [],
-      workSaturday: false,
       mode: 'longestStreak',
       notBefore: currentYearToday(2027), // 2027년이 아니면 undefined
     });

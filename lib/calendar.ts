@@ -1,5 +1,5 @@
 // /lib/calendar.ts — 날짜 배열 생성 및 휴일 마킹 (1단계)
-import type { DateRange, DayInfo, Holiday } from './types';
+import { DEFAULT_WORK_PATTERN, type DateRange, type DayInfo, type Holiday, type WorkPattern } from './types';
 
 const DAY_MS = 86_400_000;
 
@@ -78,12 +78,35 @@ export function currentYearToday(year: number): string | undefined {
   return today.startsWith(`${year}-`) ? today : undefined;
 }
 
+/** 교대 주기에서 허용하는 근무·휴무 일수 범위 */
+export const MIN_SHIFT_SPAN = 1;
+export const MAX_SHIFT_SPAN = 14;
+
+export function normalizeWorkPattern(pattern: WorkPattern | undefined): WorkPattern {
+  if (!pattern) return DEFAULT_WORK_PATTERN;
+  if (pattern.kind !== 'shift') return pattern;
+  const clamp = (n: number) =>
+    Number.isFinite(n) ? Math.min(MAX_SHIFT_SPAN, Math.max(MIN_SHIFT_SPAN, Math.floor(n))) : MIN_SHIFT_SPAN;
+  const anchor = isValidISODate(pattern.anchor) ? pattern.anchor : '2000-01-01';
+  return { kind: 'shift', workDays: clamp(pattern.workDays), offDays: clamp(pattern.offDays), anchor };
+}
+
+/** 근무 형태상 쉬는 날인지 (공휴일은 별도로 더해진다) */
+export function isOffDuty(date: string, weekday: number, pattern: WorkPattern): boolean {
+  if (pattern.kind === 'week5') return weekday === 0 || weekday === 6;
+  if (pattern.kind === 'week6') return weekday === 0;
+  const cycle = pattern.workDays + pattern.offDays;
+  const offset = ((diffDays(pattern.anchor, date) % cycle) + cycle) % cycle;
+  return offset >= pattern.workDays;
+}
+
 export interface BuildDaysOptions {
   year: number;
   holidays: Holiday[];
   blackoutRanges?: DateRange[];
   /** 이 날짜보다 이전인 평일은 연차 대상에서 제외 (진행 중인 연도에서 지난 날짜를 추천하지 않기 위함) */
   notBefore?: string;
+  workPattern?: WorkPattern;
   padding?: number;
 }
 
@@ -93,8 +116,10 @@ export function buildDays({
   holidays,
   blackoutRanges = [],
   notBefore,
+  workPattern,
   padding = PADDING_DAYS,
 }: BuildDaysOptions): DayInfo[] {
+  const pattern = normalizeWorkPattern(workPattern);
   const holidayMap = new Map(holidays.map((h) => [h.date, h]));
   const start = parseISO(`${year}-01-01`) - padding * DAY_MS;
   const end = parseISO(`${year}-12-31`) + padding * DAY_MS;
@@ -105,7 +130,7 @@ export function buildDays({
     const date = toISO(t);
     const weekday = new Date(t).getUTCDay();
     const inYear = date.startsWith(yearPrefix);
-    const isWeekend = weekday === 0 || weekday === 6;
+    const offDuty = isOffDuty(date, weekday, pattern);
 
     let holidayName: string | undefined;
     let holidayType: DayInfo['holidayType'];
@@ -123,12 +148,12 @@ export function buildDays({
       }
     }
 
-    const isOff = isWeekend || holidayName !== undefined;
+    const isOff = offDuty || holidayName !== undefined;
     const inBlackout = blackoutRanges.some((r) => r.start <= date && date <= r.end);
     const isPast = notBefore !== undefined && date < notBefore;
     const selectable = inYear && !isOff && !inBlackout && !isPast;
 
-    days.push({ date, weekday, isOff, isWeekend, holidayName, holidayType, selectable, inYear });
+    days.push({ date, weekday, isOff, isOffDuty: offDuty, holidayName, holidayType, selectable, inYear });
   }
 
   return days;

@@ -49,10 +49,10 @@ export async function GET(req: Request): Promise<Response> {
     year,
     annualLeaveCount: state.leave,
     blackoutRanges: state.blackout,
-    workSaturday: false,
     notBefore: currentYearToday(year),
     mode: state.mode,
     fixedAllocations: state.fixed,
+    workPattern: state.work,
   });
   const cards = result.recommendations.slice(0, 3).map((r) => ({
     label: r.label,

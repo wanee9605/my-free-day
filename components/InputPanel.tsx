@@ -1,9 +1,11 @@
 'use client';
 
-import { daysInMonth } from '@/lib/calendar';
+import { useState } from 'react';
+import { MAX_SHIFT_SPAN, MIN_SHIFT_SPAN, daysInMonth, normalizeWorkPattern } from '@/lib/calendar';
+import { statutoryLeaveForYear } from '@/lib/leave';
 import { SUPPORTED_YEARS } from '@/lib/holidays';
 import { MAX_BLACKOUT_RANGES, MAX_LEAVE_INPUT } from '@/lib/optimize';
-import type { DateRange, OptimizeMode } from '@/lib/types';
+import type { DateRange, OptimizeMode, WorkPattern } from '@/lib/types';
 import { clampLeave, type PlannerState } from '@/lib/urlState';
 
 interface Props {
@@ -23,6 +25,14 @@ const MODES: { value: OptimizeMode; label: string; hint: string }[] = [
 
 const LEAVE_PRESETS = [5, 10, 15, 20, 25];
 
+const WORK_KINDS: { kind: WorkPattern['kind']; label: string; hint: string }[] = [
+  { kind: 'week5', label: '주 5일', hint: '월~금 근무, 토·일 휴무' },
+  { kind: 'week6', label: '주 6일', hint: '월~토 근무, 일요일만 휴무' },
+  { kind: 'shift', label: '교대근무', hint: '근무·휴무 주기를 반복합니다. 공휴일은 쉬는 것으로 계산합니다' },
+];
+
+const DEFAULT_SHIFT = { workDays: 4, offDays: 2 } as const;
+
 const FIELD =
   'w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm font-semibold text-ink outline-none transition focus:border-forest-500';
 
@@ -35,9 +45,26 @@ function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.R
 }
 
 export default function InputPanel({ year, state, onChange, onCommit, onYearChange, notBefore }: Props) {
+  // 입사일은 개인 정보라 공유 링크(URL)에 넣지 않고 이 컴포넌트 안에만 둔다
+  const [hireDate, setHireDate] = useState('');
+  const computedLeave = hireDate === '' ? null : statutoryLeaveForYear(hireDate, year);
+
   const setLeaveTyped = (n: number) => onChange({ ...state, leave: clampLeave(n) });
   const setLeave = (n: number) => onCommit({ ...state, leave: clampLeave(n) });
   const setMode = (mode: OptimizeMode) => onCommit({ ...state, mode });
+
+  // 근무 형태가 바뀌면 쉬는 날 자체가 달라져 클러스터 구성이 뒤집히므로 고정 배정은 버린다
+  const setWork = (work: WorkPattern) => onCommit({ ...state, work, fixed: {} });
+  const setWorkKind = (kind: WorkPattern['kind']) => {
+    if (kind === state.work.kind) return;
+    if (kind !== 'shift') return setWork({ kind });
+    setWork(normalizeWorkPattern({ kind: 'shift', ...DEFAULT_SHIFT, anchor: `${year}-01-01` }));
+  };
+  const patchShift = (patch: Partial<Extract<WorkPattern, { kind: 'shift' }>>) => {
+    if (state.work.kind !== 'shift') return;
+    setWork(normalizeWorkPattern({ ...state.work, ...patch }));
+  };
+  const activeWork = WORK_KINDS.find((w) => w.kind === state.work.kind) ?? WORK_KINDS[0];
   // 블랙아웃이 바뀌면 클러스터 구성 자체가 달라지므로, 이전에 고정해 둔 배정은 버린다
   // (clusterId 가 다른 연휴를 가리키게 되는 것을 방지)
   const setBlackout = (blackout: DateRange[], immediate = false) =>
@@ -125,6 +152,43 @@ export default function InputPanel({ year, state, onChange, onCommit, onYearChan
               </button>
             ))}
           </div>
+
+          <details className="rounded-xl border border-line bg-ivory px-3 py-2.5">
+            <summary className="cursor-pointer text-xs font-semibold text-forest-700">
+              연차가 몇 개인지 모르겠다면 — 입사일로 계산
+            </summary>
+            <div className="mt-3 flex flex-col gap-2">
+              <label className="sr-only" htmlFor="hire-date">
+                입사일
+              </label>
+              <input
+                id="hire-date"
+                type="date"
+                value={hireDate}
+                max={`${year}-12-31`}
+                onChange={(e) => {
+                  setHireDate(e.target.value);
+                  const next = statutoryLeaveForYear(e.target.value, year);
+                  if (next) setLeave(next.days);
+                }}
+                className={FIELD}
+              />
+              {computedLeave ? (
+                <p className="text-xs leading-relaxed text-ink-soft">
+                  <strong className="text-ink">
+                    {year}년 법정 연차 {computedLeave.days}일
+                  </strong>
+                  <br />
+                  {computedLeave.basis}
+                </p>
+              ) : (
+                hireDate !== '' && <p className="text-xs text-ink-mute">{year}년에는 아직 입사 전입니다.</p>
+              )}
+              <p className="text-[11px] leading-relaxed text-ink-mute">
+                근로기준법 60조 기준 최소값입니다. 회계연도 기준으로 운영하거나 회사 규정이 더 유리하면 실제 개수는 다를 수 있습니다. 입사일은 공유 링크에 담기지 않습니다.
+              </p>
+            </div>
+          </details>
         </div>
 
         {/* 우선순위 */}
@@ -151,8 +215,77 @@ export default function InputPanel({ year, state, onChange, onCommit, onYearChan
           <p className="text-xs leading-relaxed text-ink-mute">{activeMode.hint}</p>
         </div>
 
-        {/* 연도 + 블랙아웃 */}
+        {/* 근무 형태 + 연도 + 블랙아웃 */}
         <div className="flex flex-col gap-7 lg:col-span-4">
+          <div className="flex flex-col gap-3">
+            <FieldLabel>근무 형태</FieldLabel>
+            <div role="group" aria-label="근무 형태" className="grid grid-cols-3 gap-1.5 rounded-2xl border border-line bg-ivory p-1.5">
+              {WORK_KINDS.map((w) => {
+                const active = w.kind === state.work.kind;
+                return (
+                  <button
+                    key={w.kind}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setWorkKind(w.kind)}
+                    className={`min-h-11 rounded-xl text-xs font-bold transition ${
+                      active ? 'bg-forest-900 text-white shadow-lift' : 'text-ink-soft hover:bg-surface hover:text-ink'
+                    }`}
+                  >
+                    {w.label}
+                  </button>
+                );
+              })}
+            </div>
+            {state.work.kind === 'shift' && (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-semibold text-ink-mute" htmlFor="shift-work">
+                    근무 일수
+                  </label>
+                  <input
+                    id="shift-work"
+                    type="number"
+                    inputMode="numeric"
+                    min={MIN_SHIFT_SPAN}
+                    max={MAX_SHIFT_SPAN}
+                    value={state.work.workDays}
+                    onChange={(e) => patchShift({ workDays: e.target.valueAsNumber })}
+                    className={FIELD}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-semibold text-ink-mute" htmlFor="shift-off">
+                    휴무 일수
+                  </label>
+                  <input
+                    id="shift-off"
+                    type="number"
+                    inputMode="numeric"
+                    min={MIN_SHIFT_SPAN}
+                    max={MAX_SHIFT_SPAN}
+                    value={state.work.offDays}
+                    onChange={(e) => patchShift({ offDays: e.target.valueAsNumber })}
+                    className={FIELD}
+                  />
+                </div>
+                <div className="col-span-2 flex flex-col gap-1.5">
+                  <label className="text-[11px] font-semibold text-ink-mute" htmlFor="shift-anchor">
+                    주기 기준일 (이 날부터 근무 시작)
+                  </label>
+                  <input
+                    id="shift-anchor"
+                    type="date"
+                    value={state.work.anchor}
+                    onChange={(e) => patchShift({ anchor: e.target.value })}
+                    className={FIELD}
+                  />
+                </div>
+              </div>
+            )}
+            <p className="text-xs leading-relaxed text-ink-mute">{activeWork.hint}</p>
+          </div>
+
           <div className="flex flex-col gap-3">
             <FieldLabel htmlFor="year-select">연도</FieldLabel>
             <select id="year-select" value={year} onChange={(e) => onYearChange(Number(e.target.value))} className={FIELD}>

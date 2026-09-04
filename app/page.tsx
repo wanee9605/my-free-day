@@ -38,10 +38,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     year: DEFAULT_YEAR,
     annualLeaveCount: state.leave,
     blackoutRanges: state.blackout,
-    workSaturday: false,
     notBefore: currentYearToday(DEFAULT_YEAR),
     mode: state.mode,
     fixedAllocations: state.fixed,
+    workPattern: state.work,
   });
   const title =
     result.totalLeaveUsed > 0

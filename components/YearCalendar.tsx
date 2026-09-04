@@ -34,7 +34,7 @@ function cellClass(day: DayInfo, mark: Mark | undefined, selected: boolean, focu
     tone = `bg-clay-soft text-clay font-bold ${mark?.band ? 'ring-1 ring-inset ring-forest-200' : ''}`;
   else if (mark?.band) tone = 'bg-forest-50 text-forest-800 font-semibold';
   else if (!day.isOff && !day.selectable) tone = 'bg-line text-ink-mute line-through';
-  else if (day.isWeekend) tone = 'bg-ivory-deep text-ink-soft';
+  else if (day.isOffDuty) tone = 'bg-ivory-deep text-ink-soft';
   else tone = 'text-ink-soft hover:bg-ivory';
   const ring = selected
     ? 'outline outline-2 outline-offset-1 outline-ink'
@@ -47,7 +47,7 @@ function cellClass(day: DayInfo, mark: Mark | undefined, selected: boolean, focu
 function describe(day: DayInfo, mark: Mark | undefined): string {
   const bits: string[] = [];
   if (day.holidayName) bits.push(day.holidayName);
-  else if (day.isWeekend) bits.push('주말');
+  else if (day.isOffDuty) bits.push(day.weekday === 0 || day.weekday === 6 ? '주말' : '휴무');
   if (mark?.leave) bits.push('추천 연차');
   if (!day.isOff && !day.selectable) bits.push('블랙아웃');
   if (mark?.band) bits.push(`${mark.band.label} ${fmtRangeShort(mark.band.start, mark.band.end)} · ${mark.band.streak}일`);

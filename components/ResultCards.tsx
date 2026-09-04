@@ -45,7 +45,7 @@ function StreakStrip({
             ? 'bg-forest-900 text-white'
             : d.holidayName
               ? 'bg-clay-soft text-clay'
-              : d.isWeekend
+              : d.isOffDuty
                 ? 'bg-ivory-deep text-ink-soft'
                 : 'bg-ivory text-ink-mute';
           return (

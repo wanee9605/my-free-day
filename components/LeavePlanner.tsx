@@ -100,17 +100,17 @@ export default function LeavePlanner({ year }: Props) {
         year,
         annualLeaveCount: applied.leave,
         blackoutRanges: applied.blackout,
-        workSaturday: false,
         mode: applied.mode,
         fixedAllocations: applied.fixed,
         notBefore,
+        workPattern: applied.work,
       }),
     [year, applied, notBefore],
   );
 
   const allDays = useMemo(
-    () => buildYearDays({ year, blackoutRanges: applied.blackout, notBefore }),
-    [year, applied.blackout, notBefore],
+    () => buildYearDays({ year, blackoutRanges: applied.blackout, notBefore, workPattern: applied.work }),
+    [year, applied.blackout, applied.work, notBefore],
   );
   const yearDays = useMemo(() => allDays.filter((d) => d.inYear), [allDays]);
   const dayMap = useMemo(() => new Map(allDays.map((d) => [d.date, d])), [allDays]);
