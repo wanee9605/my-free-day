@@ -248,7 +248,33 @@ export default function SidePanel({
           );
         })}
         {result.runs.length === 0 && (
-          <span className="text-[11.5px] font-medium text-ink-3">아직 배치한 연차가 없습니다.</span>
+          <span className="text-[11.5px] font-medium text-ink-3">
+            {result.usedCount === 0 ? '아직 배치한 연차가 없습니다.' : '아직 이어지는 연휴가 없습니다.'}
+          </span>
+        )}
+
+        {result.stranded.length > 0 && (
+          <div className="flex flex-col gap-1.5 rounded-md border border-dashed border-line bg-canvas px-[11px] py-[9px]">
+            <span className="text-[11.5px] font-semibold text-ink-2">붙지 않은 연차 {result.stranded.length}일</span>
+            <span className="text-[11px] leading-relaxed text-ink-3">
+              앞뒤 휴일과 이어지지 않아 하루로 끝납니다. 눌러서 빼거나 옆 날짜로 옮겨 보세요.
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {result.stranded.map((run, i) => (
+                <button
+                  key={run.start}
+                  type="button"
+                  onClick={() => onToggleDay(run.start)}
+                  onMouseEnter={() => onHoverRun(result.runs.length + i)}
+                  onMouseLeave={() => onHoverRun(-1)}
+                  className="rounded border border-line-soft bg-surface px-1.5 py-0.5 text-[11px] font-semibold text-ink-2 transition hover:border-sun hover:text-sun"
+                  aria-label={`${fmtShort(run.start)} 연차 빼기`}
+                >
+                  {fmtShort(run.start)} ×
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </Section>
 

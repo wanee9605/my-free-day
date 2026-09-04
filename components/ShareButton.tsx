@@ -32,6 +32,9 @@ export function buildShareText(year: number, result: ManualResult, url: string):
       `${i + 1}. ${r.label} ${r.total}일 (${fmtRangeShort(r.start, r.end)}) · 연차 ${r.cost}일: ${r.leaveDays.map(fmtShort).join(', ')}`,
     );
   });
+  if (result.stranded.length > 0) {
+    lines.push(`※ 붙지 않은 연차 ${result.stranded.length}일: ${result.stranded.map((r) => fmtShort(r.start)).join(', ')}`);
+  }
   if (result.usedCount > 0) lines.push(`※ 총 휴식 ${result.restDays}일 · 연차 1일당 ${result.perLeave.toFixed(1)}일`);
   lines.push(url);
   return lines.join('\n');
@@ -42,7 +45,7 @@ const BUTTON = 'min-h-9 rounded-md border px-3 text-[12px] font-semibold transit
 export default function ShareButton({ year, state, result }: Props) {
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const ogUrl = buildOgUrl(year, state);
-  const empty = result.runs.length === 0;
+  const empty = result.usedCount === 0;
 
   async function copy(text: string, done: string) {
     try {
@@ -84,7 +87,7 @@ export default function ShareButton({ year, state, result }: Props) {
       return;
     }
     try {
-      const ics = buildIcs(year, result.runs, { sourceUrl: window.location.href });
+      const ics = buildIcs(year, [...result.runs, ...result.stranded], { sourceUrl: window.location.href });
       const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

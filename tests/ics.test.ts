@@ -69,3 +69,16 @@ describe('텍스트 처리', () => {
     expect(icsFileName(2028)).toBe('연차계획-2028.ics');
   });
 });
+
+describe('붙지 않은 연차', () => {
+  const lonely = evaluate({ year: 2027, blackoutRanges: [], selected: ['2027-07-07'] });
+  const out = buildIcs(2027, [...lonely.runs, ...lonely.stranded], { now: NOW });
+
+  it('하루짜리는 연차 일정 하나만 넣는다 (같은 날에 "연휴 1일" 을 겹치지 않는다)', () => {
+    expect(out.split('\r\n').filter((l) => l === 'BEGIN:VEVENT')).toHaveLength(1);
+    expect(out).toContain('SUMMARY:연차 · 연휴');
+    expect(out).not.toContain('연휴 1일');
+    expect(out).toContain('DTSTART;VALUE=DATE:20270707');
+    expect(out).toContain('DTEND;VALUE=DATE:20270708');
+  });
+});

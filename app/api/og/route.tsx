@@ -69,10 +69,12 @@ export async function GET(req: Request): Promise<Response> {
   const headline2 = result.usedCount > 0 ? `최장 ${result.longestStreak}일 연휴` : `${year}년 연휴 만들기`;
   const subline =
     result.usedCount > 0
-      ? `연휴 ${result.runs.length}건 · 총 휴식 ${result.restDays}일 · 연차 1일당 ${result.perLeave.toFixed(1)}일`
+      ? `연휴 ${result.runs.length}건 · 총 휴식 ${result.restDays}일 · 연차 1일당 ${result.perLeave.toFixed(1)}일${
+          result.stranded.length > 0 ? ` · 붙지 않은 연차 ${result.stranded.length}일` : ''
+        }`
       : '달력의 평일을 눌러 연차를 직접 배치합니다';
   const footer = `연차 최적화 캘린더 · 공휴일 데이터 기준 ${result.dataUpdatedAt}`;
-  const emptyText = '아직 배치한 연차가 없습니다';
+  const emptyText = result.usedCount === 0 ? '아직 배치한 연차가 없습니다' : '아직 이어지는 연휴가 없습니다';
 
   const allText = [eyebrow, headline, headline2, subline, footer, emptyText, '연차 계산기']
     .concat(cards.flatMap((c) => [c.label, c.streak, c.range, c.leave]))

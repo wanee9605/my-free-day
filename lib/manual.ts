@@ -44,8 +44,10 @@ export interface ManualResult {
   restDays: number;
   /** 연차 1일당 휴일 수 */
   perLeave: number;
-  /** 연차가 들어간 구간만, 긴 것부터 */
+  /** 연차로 만들어낸 연휴 (2일 이상), 긴 것부터 */
   runs: OffRun[];
+  /** 앞뒤 휴일과 이어지지 못한 하루짜리 연차. 연휴는 아니지만 신청은 해야 하는 날 */
+  stranded: OffRun[];
   longestStreak: number;
   longestRun: OffRun | null;
   dataUpdatedAt: string;
@@ -135,10 +137,13 @@ export function suggestDays(days: DayInfo[], selected: Iterable<string>, budget:
 export function evaluate(input: ManualInput): ManualResult {
   const days = buildYearDays(input);
   const used = keepSelectable(days, input.selected);
-  const runs = computeRuns(days, used)
+  const placed = computeRuns(days, used)
     .filter((r) => r.cost > 0)
     .sort((a, b) => b.total - a.total || a.start.localeCompare(b.start));
-  const restDays = runs.reduce((sum, r) => sum + r.total, 0);
+  // 하루짜리는 아무것도 이어붙이지 못한 연차다. 휴식 일수에는 넣되 "연휴" 로는 세지 않는다
+  const runs = placed.filter((r) => r.total > 1);
+  const stranded = placed.filter((r) => r.total === 1);
+  const restDays = placed.reduce((sum, r) => sum + r.total, 0);
   const longestRun = runs[0] ?? null;
 
   return {
@@ -149,7 +154,8 @@ export function evaluate(input: ManualInput): ManualResult {
     restDays,
     perLeave: used.length > 0 ? Math.round((restDays / used.length) * 10) / 10 : 0,
     runs,
-    longestStreak: longestRun?.total ?? 0,
+    stranded,
+    longestStreak: longestRun?.total ?? (stranded.length > 0 ? 1 : 0),
     longestRun,
     dataUpdatedAt: getHolidayData(input.year)?.updatedAt ?? '',
   };

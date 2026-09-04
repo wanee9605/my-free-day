@@ -142,3 +142,40 @@ describe('URL 인코딩 — 날짜를 36진수 두 자리로', () => {
     }
   });
 });
+
+describe('붙지 않은 연차 — 하루로 끝나는 배치', () => {
+  // 2027-07-07(수)은 앞뒤가 모두 평일이라 무엇과도 이어지지 않는다
+  const lonely = '2027-07-07';
+
+  it('연휴 목록이 아니라 stranded 로 따로 빠진다', () => {
+    const r = evaluate({ year: YEAR, blackoutRanges: [], selected: [lonely] });
+    expect(at(lonely).selectable).toBe(true);
+    expect(r.runs).toHaveLength(0);
+    expect(r.stranded).toHaveLength(1);
+    expect(r.stranded[0].start).toBe(lonely);
+    expect(r.stranded[0].total).toBe(1);
+  });
+
+  it('휴식 일수와 효율에는 그대로 반영된다 — 낭비라는 신호를 지우지 않는다', () => {
+    const r = evaluate({ year: YEAR, blackoutRanges: [], selected: [lonely] });
+    expect(r.restDays).toBe(1);
+    expect(r.perLeave).toBe(1);
+    expect(r.longestStreak).toBe(1); // 연휴가 없어도 0일이라고 하지 않는다
+  });
+
+  it('연휴와 섞여 있어도 각자 자리로 간다', () => {
+    const r = evaluate({ year: YEAR, blackoutRanges: [], selected: ['2027-09-13', '2027-09-17', lonely] });
+    expect(r.runs.map((x) => x.total)).toEqual([9]);
+    expect(r.stranded.map((x) => x.start)).toEqual([lonely]);
+    expect(r.restDays).toBe(10); // 9 + 1
+    expect(r.usedCount).toBe(3);
+    expect(r.longestStreak).toBe(9);
+  });
+
+  it('아무것도 배치하지 않으면 둘 다 비어 있다', () => {
+    const r = evaluate({ year: YEAR, blackoutRanges: [], selected: [] });
+    expect(r.runs).toHaveLength(0);
+    expect(r.stranded).toHaveLength(0);
+    expect(r.longestStreak).toBe(0);
+  });
+});

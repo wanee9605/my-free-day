@@ -92,19 +92,22 @@ export function buildIcs(year: number, runs: OffRun[], options: BuildIcsOptions 
     const days = rec.leaveDays;
     const detail = [`연차 ${rec.cost}일: ${days.join(', ')}`, options.sourceUrl].filter(Boolean).join('\n');
 
-    lines.push(
-      ...renderEvent(
-        {
-          uid: `${year}-${rec.start}-streak@my-free-day`,
-          start: rec.start,
-          endInclusive: rec.end,
-          summary: `${rec.label} ${rec.total}일`,
-          description: detail,
-          transparent: true,
-        },
-        stamp,
-      ),
-    );
+    // 하루짜리는 연차 일정 하나로 충분하다. 같은 날에 "연휴 1일" 을 겹쳐 넣지 않는다
+    if (rec.total > 1) {
+      lines.push(
+        ...renderEvent(
+          {
+            uid: `${year}-${rec.start}-streak@my-free-day`,
+            start: rec.start,
+            endInclusive: rec.end,
+            summary: `${rec.label} ${rec.total}일`,
+            description: detail,
+            transparent: true,
+          },
+          stamp,
+        ),
+      );
+    }
 
     for (const date of days) {
       lines.push(

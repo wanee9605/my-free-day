@@ -66,6 +66,8 @@ export default function Planner({ year }: Props) {
   );
 
   const usedSet = useMemo(() => new Set(result.used), [result.used]);
+  // 하루짜리 연차도 달력에는 표시해야 하므로 연휴 뒤에 이어 붙인다 (hoverRun 인덱스가 그대로 맞는다)
+  const bandRuns = useMemo(() => [...result.runs, ...result.stranded], [result.runs, result.stranded]);
   const suggestions = useMemo(
     () => suggestDays(result.days, usedSet, state.leave, 3),
     [result.days, usedSet, state.leave],
@@ -206,7 +208,7 @@ export default function Planner({ year }: Props) {
           <YearGrid
             year={year}
             days={result.days}
-            runs={result.runs}
+            runs={bandRuns}
             selected={usedSet}
             hoverRun={hoverRun}
             hoverDate={hoverDate}
